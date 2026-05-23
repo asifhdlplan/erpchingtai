@@ -147,16 +147,16 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
 
   return (
     <PageLayout currentPage={currentPage} onNavigate={onNavigate}>
-      <header className="bg-white border-b p-6 flex justify-between items-center">
+      <header className="sap-header border-b border-[#9fb3cc] p-4 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Ha-Meem Ching Tai <span className="text-blue-600">Planning</span></h1>
-          <p className="text-xs font-medium text-slate-500">Planning Sheet Creation Module</p>
+          <h1 className="text-lg font-bold text-[#1f3c5e]">Ha-Meem Ching Tai <span className="text-blue-700">Planning</span></h1>
+          <p className="text-[11px] font-bold text-[#3a5f86]">Planning Sheet Creation Module</p>
         </div>
         <div className="flex gap-3">
           {showPreview && (
             <button 
               onClick={() => setShowPreview(false)} 
-              className="px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded"
+              className="sap-btn px-4 py-2 text-xs"
             >
               BACK TO EDIT
             </button>
@@ -164,7 +164,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
           {!showPreview && (
             <button 
               onClick={handleCreatePlanningSheet}
-              className="px-6 py-2 bg-blue-600 text-white text-xs font-bold rounded shadow-lg hover:bg-blue-700"
+              className="px-6 py-2 bg-[#0b4f8a] text-white text-xs font-bold border border-[#0a3d6a] rounded-sm"
             >
               CREATE PLANNING SHEET
             </button>
@@ -172,7 +172,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-6 bg-slate-50 space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 bg-[#e7edf5] space-y-6">
         {!showPreview ? (
           <>
             <OrderSearch onOrderSelect={handleOrderSelect} />
@@ -189,7 +189,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
                 onKeyDown={handleEntryKeyDown}
                 className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
               >
-                <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <section className="sap-panel p-4">
                   <div className="flex items-center gap-2 mb-4 pb-2 border-b">
                     <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
                     <h2 className="text-sm font-bold text-slate-700 uppercase">Header Information</h2>
@@ -219,13 +219,13 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
                   </div>
                 </section>
 
-                <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <section className="sap-panel p-4">
                   <div className="flex items-center justify-between mb-4 pb-2 border-b">
                     <div className="flex items-center gap-2">
                       <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
                       <h2 className="text-sm font-bold text-slate-700 uppercase">01. Warping Information</h2>
                     </div>
-                    <button onClick={() => setWarpingRows([...warpingRows, {}])} className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold">+ ADD ROW</button>
+                    <button onClick={() => setWarpingRows([...warpingRows, {}])} className="sap-btn text-xs px-2 py-1">+ ADD ROW</button>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs border-collapse">
@@ -265,7 +265,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
                   </div>
                 </section>
 
-                <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <section className="sap-panel p-4">
                   <div className="flex items-center gap-2 mb-4 pb-2 border-b">
                     <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
                     <h2 className="text-sm font-bold text-slate-700 uppercase">02. Sizing Information</h2>
@@ -278,13 +278,13 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
                   </div>
                 </section>
 
-                <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <section className="sap-panel p-4">
                   <div className="flex items-center justify-between mb-4 pb-2 border-b">
                     <div className="flex items-center gap-2">
                       <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
                       <h2 className="text-sm font-bold text-slate-700 uppercase">03. Weaving Information</h2>
                     </div>
-                    <button onClick={() => setWeavingRows([...weavingRows, {}])} className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold">+ ADD ROW</button>
+                    <button onClick={() => setWeavingRows([...weavingRows, {}])} className="sap-btn text-xs px-2 py-1">+ ADD ROW</button>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs border-collapse">

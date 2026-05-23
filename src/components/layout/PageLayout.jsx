@@ -9,17 +9,17 @@ export const Sidebar = ({ currentPage, onNavigate }) => {
   ];
 
   return (
-    <aside className="w-64 h-screen bg-slate-900 text-slate-300 flex flex-col transition-all duration-300">
-      <div className="p-6 bg-slate-950 border-b border-slate-800">
-        <h1 className="text-xl font-bold text-white tracking-tight">HCT <span className="text-blue-400">ERP</span></h1>
-        <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Planning Module</p>
+    <aside className="w-64 h-screen bg-[#d8e3f1] text-[#1f3c5e] flex flex-col border-r border-[#8ea6c3]">
+      <div className="p-4 sap-header">
+        <h1 className="text-lg font-bold tracking-tight">HCT <span className="text-[#0b4f8a]">ERP</span></h1>
+        <p className="text-[10px] uppercase tracking-wider mt-1 text-[#3a5f86]">Planning Module</p>
       </div>
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-3 space-y-2">
         {navItems.map((item) => (
           <button
             key={item.key}
             onClick={() => onNavigate?.(item.key)}
-            className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-all ${currentPage === item.key ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'bg-slate-800/40 text-slate-200 hover:bg-slate-800'}`}
+            className={`w-full text-left px-3 py-2 rounded-sm text-xs font-bold border ${currentPage === item.key ? 'bg-[#0b4f8a] text-white border-[#0a3d6a]' : 'sap-btn border-[#8ea6c3]'}`}
           >
             {item.label}
           </button>
@@ -34,15 +34,15 @@ export const PageLayout = ({ children, currentPage, onNavigate }) => {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#e7edf5] overflow-hidden">
       <Sidebar currentPage={currentPage} onNavigate={onNavigate} />
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-14 bg-white border-b px-6 flex items-center justify-end">
+        <header className="h-12 sap-header px-4 flex items-center justify-end">
           <div className="relative">
-            <button onClick={() => setOpen((v) => !v)} className="text-sm px-3 py-1 rounded border bg-slate-50">Welcome, {session?.username}</button>
+            <button onClick={() => setOpen((v) => !v)} className="sap-btn text-xs px-3 py-1">User: {session?.username}</button>
             {open && (
-              <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg p-2 z-40">
-                <button onClick={logout} className="w-full text-left text-sm px-2 py-1 hover:bg-slate-100 rounded">Logout</button>
+              <div className="absolute right-0 mt-2 w-40 bg-[#f3f6fa] border border-[#8ea6c3] rounded-sm shadow-lg p-2 z-40">
+                <button onClick={logout} className="w-full text-left text-xs px-2 py-1 sap-btn">Logout</button>
               </div>
             )}
           </div>

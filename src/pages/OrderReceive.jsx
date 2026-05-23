@@ -130,28 +130,26 @@ const OrderReceive = ({ currentPage, onNavigate }) => {
   return (
     <PageLayout currentPage={currentPage} onNavigate={onNavigate}>
       {/* Header Section */}
-      <header className="bg-white border-b p-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50"></div>
-        <div className="relative z-10 flex justify-between items-center">
+      <header className="sap-header border-b border-[#9fb3cc] p-4">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight animate-in fade-in slide-in-from-left duration-700">
+            <h1 className="text-lg font-bold text-[#1f3c5e] tracking-tight">
               Ha-meem Ching Tai <span className="text-blue-600">ERP Solution</span>
             </h1>
-            <p className="text-xs font-medium text-slate-500 mt-1 flex items-center gap-2 animate-in fade-in slide-in-from-left duration-1000">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              Planning Module | Created By <span className="text-blue-600 font-bold">Asif</span>
+            <p className="text-[11px] font-bold text-[#3a5f86] mt-1">
+              Planning Module | Created By Asif
             </p>
           </div>
           <div className="flex gap-3">
             <button 
               onClick={resetForm}
-              className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 rounded hover:bg-slate-200 transition-all"
+              className="sap-btn px-4 py-2 text-xs"
             >
               RESET
             </button>
             <button 
               onClick={handleSave}
-              className="px-6 py-2 text-xs font-bold text-white bg-blue-600 rounded shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95"
+              className="px-6 py-2 text-xs font-bold text-white bg-[#0b4f8a] border border-[#0a3d6a] rounded-sm"
             >
               {isEditing ? 'UPDATE ORDER' : 'POST ORDER'}
             </button>
@@ -161,7 +159,7 @@ const OrderReceive = ({ currentPage, onNavigate }) => {
 
       <div ref={entryAreaRef} onKeyDown={handleEntryKeyDown} className="flex-1 overflow-y-auto p-6 space-y-8 bg-slate-100">
         {/* Form Section */}
-        <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <section className="sap-panel p-4">
           <div className="flex items-center gap-2 mb-6 pb-2 border-b">
             <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
             <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Order Information</h2>
@@ -216,7 +214,7 @@ const OrderReceive = ({ currentPage, onNavigate }) => {
         </section>
 
         {/* Grid Section */}
-        <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <section className="sap-panel p-4">
           <div className="flex items-center gap-2 mb-6 pb-2 border-b">
             <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
             <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Item Details</h2>
@@ -225,7 +223,7 @@ const OrderReceive = ({ currentPage, onNavigate }) => {
         </section>
 
         {/* Previous Data Section */}
-        <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 animate-in fade-in slide-in-from-bottom-12 duration-1000 mb-10">
+        <section className="sap-panel p-4 mb-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-2 border-b">
             <div className="flex items-center gap-2">
               <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
