@@ -1,0 +1,101 @@
+import React, { useState } from 'react';
+
+export const OrderGrid = ({ rows, setRows }) => {
+  const columns = [
+    { key: 'styleNo', label: 'StyleNo', required: true },
+    { key: 'qnty', label: 'Qnty' },
+    { key: 'salesRate', label: 'Sales Rate' },
+    { key: 'preCostRate', label: 'PreCostRate' },
+    { key: 'approveRate', label: 'ApproveRate' },
+    { key: 'delDate', label: 'DelDate', type: 'date' },
+    { key: 'compDt', label: 'CompDt', type: 'date' },
+    { key: 'piWidth', label: 'PI Width' },
+    { key: 'piShrink', label: 'PI Shrink' },
+    { key: 'code', label: 'Code', required: true },
+    { key: 'salesOty', label: 'SalesOTY' },
+    { key: 'construction', label: 'Construction' },
+    { key: 'weav', label: 'Weav' },
+    { key: 'width', label: 'Width' },
+  ];
+
+  const handleInputChange = (rowIndex, key, value) => {
+    const newRows = [...rows];
+    newRows[rowIndex] = { ...newRows[rowIndex], [key]: value };
+    setRows(newRows);
+  };
+
+  const addRow = () => {
+    setRows([...rows, {}]);
+  };
+
+  const removeRow = (index) => {
+    const newRows = rows.filter((_, i) => i !== index);
+    setRows(newRows);
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="overflow-x-auto border rounded-lg shadow-sm bg-white">
+        <table className="w-full text-left border-collapse min-w-[1200px]">
+          <thead className="bg-slate-100 sticky top-0 z-10">
+            <tr>
+              <th className="p-2 border-b text-[11px] font-bold text-slate-600 uppercase w-10 text-center">#</th>
+              {columns.map((col) => (
+                <th key={col.key} className="p-2 border-b text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  {col.label} {col.required && <span className="text-red-500">*</span>}
+                </th>
+              ))}
+              <th className="p-2 border-b text-[11px] font-bold text-slate-600 uppercase w-10 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={columns.length + 2} className="p-8 text-center text-slate-400 text-sm italic">
+                  No items added. Click "Add Row" to begin.
+                </td>
+              </tr>
+            )}
+            {rows.map((row, rowIndex) => (
+              <tr key={rowIndex} className="hover:bg-blue-50 transition-colors border-b last:border-b-0">
+                <td className="p-2 text-center text-xs text-slate-400 border-r">{rowIndex + 1}</td>
+                {columns.map((col) => (
+                  <td key={col.key} className="p-1 border-r last:border-r-0">
+                    <input
+                      type={col.type || 'text'}
+                      value={row[col.key] || ''}
+                      onChange={(e) => handleInputChange(rowIndex, col.key, e.target.value)}
+                      className={`w-full px-2 py-1 text-xs border-transparent focus:border-blue-400 focus:ring-1 focus:ring-blue-400 rounded outline-none transition-all ${
+                        col.required && !row[col.key] ? 'bg-red-50' : 'bg-transparent'
+                      }`}
+                    />
+                  </td>
+                ))}
+                <td className="p-2 text-center">
+                  <button 
+                    onClick={() => removeRow(rowIndex)}
+                    className="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-all"
+                    title="Remove row"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <button 
+        onClick={addRow}
+        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition-all w-fit shadow-md"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+        </svg>
+        ADD ROW
+      </button>
+    </div>
+  );
+};
