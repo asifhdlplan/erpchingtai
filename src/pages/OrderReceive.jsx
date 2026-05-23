@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { FormInput, SelectInput, SearchBar } from '../components/ui/FormInputs';
 import { OrderGrid } from '../components/ui/OrderGrid';
 import { storageService, STORAGE_KEY } from '../services/storage';
 
 const OrderReceive = ({ currentPage, onNavigate }) => {
+  const entryAreaRef = useRef(null);
   const [formData, setFormData] = useState({
     piRecDate: '',
     piNo: '',
@@ -93,6 +94,39 @@ const OrderReceive = ({ currentPage, onNavigate }) => {
     );
   });
 
+  const focusByOffset = (currentEl, offset) => {
+    const root = entryAreaRef.current;
+    if (!root) return;
+    const fields = Array.from(root.querySelectorAll('input, select, textarea, button'))
+      .filter((el) => !el.disabled && !el.readOnly && el.type !== 'hidden' && el.tabIndex !== -1);
+    const idx = fields.indexOf(currentEl);
+    if (idx < 0) return;
+    const nextIdx = idx + offset;
+    if (nextIdx >= 0 && nextIdx < fields.length) {
+      fields[nextIdx].focus();
+      if (fields[nextIdx].select) fields[nextIdx].select();
+    }
+  };
+
+  const handleEntryKeyDown = (e) => {
+    const tag = e.target.tagName;
+    if (!['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(tag)) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      focusByOffset(e.target, 1);
+      return;
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      focusByOffset(e.target, -1);
+      return;
+    }
+    if (e.key === 'Enter' && tag !== 'TEXTAREA') {
+      e.preventDefault();
+      handleSave();
+    }
+  };
+
   return (
     <PageLayout currentPage={currentPage} onNavigate={onNavigate}>
       {/* Header Section */}
@@ -125,7 +159,7 @@ const OrderReceive = ({ currentPage, onNavigate }) => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-slate-50/50">
+      <div ref={entryAreaRef} onKeyDown={handleEntryKeyDown} className="flex-1 overflow-y-auto p-6 space-y-8 bg-slate-100">
         {/* Form Section */}
         <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex items-center gap-2 mb-6 pb-2 border-b">

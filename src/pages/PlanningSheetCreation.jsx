@@ -42,18 +42,19 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
   }, []);
 
   const handleOrderSelect = (order) => {
+    const firstItem = order.items?.[0] || {};
     setSelectedOrder(order);
     setFormData(prev => ({
       ...prev,
       buyer: order.buyer || '',
-      styleCode: order.styleNo || '',
+      styleCode: firstItem.styleNo || order.styleCode || '',
       endBuyer: order.customer || '',
       mktPerson: order.mktPerson || '',
       orderRef: order.orderRef || '',
-      piWidth: order.piWidth || '',
-      piShrink: order.piShrink || '',
-      weave: order.weave || '',
-      orderQnty: order.qnty || '',
+      piWidth: firstItem.piWidth || order.piWidth || '',
+      piShrink: firstItem.piShrink || order.piShrink || '',
+      weave: firstItem.weav || order.weave || '',
+      orderQnty: firstItem.qnty || order.qnty || '',
     }));
   };
 

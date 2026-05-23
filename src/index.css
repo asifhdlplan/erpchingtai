@@ -5,47 +5,31 @@
 @layer base {
   body {
     @apply antialiased text-slate-900;
+    font-family: Tahoma, 'Segoe UI', Arial, sans-serif;
+    background: #e7edf5;
   }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.sap-panel {
+  background: #f3f6fa;
+  border: 1px solid #b7c4d6;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 #fff;
 }
 
-@keyframes slideIn {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+.sap-header {
+  background: linear-gradient(180deg, #d6e2f2 0%, #bfd1e8 100%);
+  border-bottom: 1px solid #9fb3cc;
 }
 
-.animate-in {
-  animation-fill-mode: forwards;
+.sap-btn {
+  background: linear-gradient(180deg, #f5f8fc 0%, #d8e3f1 100%);
+  border: 1px solid #8ea6c3;
+  color: #1f3c5e;
+  border-radius: 3px;
+  font-weight: 700;
 }
 
-.fade-in {
-  animation-name: fadeIn;
-}
-
-.slide-in-from-bottom-4 {
-  animation-name: slideIn;
-  animation-duration: 500ms;
-}
-
-.slide-in-from-bottom-8 {
-  animation-name: slideIn;
-  animation-duration: 700ms;
-}
-
-.slide-in-from-bottom-12 {
-  animation-name: slideIn;
-  animation-duration: 1000ms;
-}
-
-.slide-in-from-left {
-  animation: slideInLeft 700ms ease-out forwards;
-}
-
-@keyframes slideInLeft {
-  from { transform: translateX(-20px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+.sap-btn:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #dfe9f6 100%);
 }
