@@ -4,12 +4,18 @@ import { SearchBar } from '../ui/FormInputs';
 
 export const OrderSearch = ({ onOrderSelect }) => {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState(storageService.getAllOrders());
 
-  const handleSearch = () => {
+  const filterOrders = (searchText) => {
     const allOrders = storageService.getAllOrders();
-    const filtered = allOrders.filter(order => {
-      const s = query.toLowerCase();
+    const s = (searchText || '').toLowerCase().trim();
+
+    if (!s) {
+      setResults(allOrders);
+      return;
+    }
+
+    const filtered = allOrders.filter((order) => {
       return (
         order.piNo?.toLowerCase().includes(s) ||
         order.buyer?.toLowerCase().includes(s) ||
@@ -20,6 +26,20 @@ export const OrderSearch = ({ onOrderSelect }) => {
     setResults(filtered);
   };
 
+  useEffect(() => {
+    filterOrders(query);
+  }, [query]);
+
+  useEffect(() => {
+    const refresh = () => filterOrders(query);
+    window.addEventListener('storage', refresh);
+    window.addEventListener('focus', refresh);
+    return () => {
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('focus', refresh);
+    };
+  }, [query]);
+
   return (
     <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm space-y-4">
       <div className="flex gap-2 items-end">
@@ -28,13 +48,13 @@ export const OrderSearch = ({ onOrderSelect }) => {
           <SearchBar value={query} onChange={setQuery} placeholder="PI No, Buyer, Style, etc..." />
         </div>
         <button 
-          onClick={handleSearch}
+          onClick={() => filterOrders(query)}
           className="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition-all"
         >
           SEARCH
         </button>
         <button 
-          onClick={() => { setQuery(''); setResults([]); }}
+          onClick={() => { setQuery(''); filterOrders(''); }}
           className="px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded hover:bg-slate-200 transition-all"
         >
           CLEAR

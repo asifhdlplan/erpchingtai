@@ -4,7 +4,7 @@ import { PlanningSheetPreview } from '../components/planning/PlanningSheetPrevie
 import { planningStorage, PLANNING_STORAGE_KEY } from '../services/planningStorage';
 import { SearchBar } from '../components/ui/FormInputs';
 
-const AllPlanningSheets = () => {
+const AllPlanningSheets = ({ currentPage, onNavigate }) => {
   const [sheets, setSheets] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredSheets, setFilteredSheets] = useState([]);
@@ -57,7 +57,7 @@ const AllPlanningSheets = () => {
   };
 
   return (
-    <PageLayout>
+    <PageLayout currentPage={currentPage} onNavigate={onNavigate}>
       <header className="bg-white border-b p-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-black text-slate-800">Planning <span className="text-blue-600">Archive</span></h1>
@@ -118,52 +118,61 @@ const AllPlanningSheets = () => {
                       <th className="p-4 border-b text-center">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="text-xs">
-                    {filteredSheets.length === 0 ? (
-                      <tr>
-                        <td colSpan="8" className="p-12 text-center text-slate-400 italic">
-                          No Planning Sheets found matching your search.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredSheets.map(sheet => (
-                        <tr key={sheet.id} className="hover:bg-blue-50 transition-colors border-b last:border-b-0">
-                          <td className="p-4 font-bold text-blue-600">{sheet.setNo}</td>
-                          <td className="p-4 text-slate-700">{sheet.buyer}</td>
-                          <td className="p-4 text-slate-600">{sheet.styleCode}</td>
-                          <td className="p-4 text-slate-600">{sheet.date}</td>
-                          <td className="p-4 text-slate-600">{sheet.orderRef}</td>
-                          <td className="p-4 text-slate-600">{sheet.weave}</td>
-                          <td className="p-4 text-slate-600">{sheet.colour}</td>
-                          <td className="p-4">
-                            <div className="flex justify-center gap-2">
-                              <button 
-                                onClick={() => handleView(sheet)}
-                                className="p-2 text-blue-600 hover:bg-blue-100 rounded transition-all"
-                                title="View"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                              </button>
-                              <button 
-                                onClick={() => handlePrint(sheet)}
-                                className="p-2 text-green-600 hover:bg-green-100 rounded transition-all"
-                                title="Print/PDF"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                              </button>
-                              <button 
-                                onClick={() => handleDelete(sheet.id)}
-                                className="p-2 text-red-600 hover:bg-red-100 rounded transition-all"
-                                title="Delete"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tr>
-                  </tbody>
+<tbody className="text-xs">
+  {filteredSheets.length === 0 ? (
+    <tr>
+      <td colSpan="8" className="p-12 text-center text-slate-400 italic">
+        No Planning Sheets found matching your search.
+      </td>
+    </tr>
+  ) : (
+    filteredSheets.map(sheet => (
+      <tr key={sheet.id} className="hover:bg-blue-50 transition-colors border-b last:border-b-0">
+        <td className="p-4 font-bold text-blue-600">{sheet.setNo}</td>
+        <td className="p-4 text-slate-700">{sheet.buyer}</td>
+        <td className="p-4 text-slate-600">{sheet.styleCode}</td>
+        <td className="p-4 text-slate-600">{sheet.date}</td>
+        <td className="p-4 text-slate-600">{sheet.orderRef}</td>
+        <td className="p-4 text-slate-600">{sheet.weave}</td>
+        <td className="p-4 text-slate-600">{sheet.colour}</td>
+        <td className="p-4">
+          <div className="flex justify-center gap-2">
+            <button
+              onClick={() => handleView(sheet)}
+              className="p-2 text-blue-600 hover:bg-blue-100 rounded transition-all"
+              title="View"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+
+            <button
+              onClick={() => handlePrint(sheet)}
+              className="p-2 text-green-600 hover:bg-green-100 rounded transition-all"
+              title="Print/PDF"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+            </button>
+
+            <button
+              onClick={() => handleDelete(sheet.id)}
+              className="p-2 text-red-600 hover:bg-red-100 rounded transition-all"
+              title="Delete"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
                 </table>
               </div>
             </section>

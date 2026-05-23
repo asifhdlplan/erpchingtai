@@ -4,7 +4,7 @@ import { FormInput, SelectInput, SearchBar } from '../components/ui/FormInputs';
 import { OrderGrid } from '../components/ui/OrderGrid';
 import { storageService, STORAGE_KEY } from '../services/storage';
 
-const OrderReceive = () => {
+const OrderReceive = ({ currentPage, onNavigate }) => {
   const [formData, setFormData] = useState({
     piRecDate: '',
     piNo: '',
@@ -94,7 +94,7 @@ const OrderReceive = () => {
   });
 
   return (
-    <PageLayout>
+    <PageLayout currentPage={currentPage} onNavigate={onNavigate}>
       {/* Header Section */}
       <header className="bg-white border-b p-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50"></div>

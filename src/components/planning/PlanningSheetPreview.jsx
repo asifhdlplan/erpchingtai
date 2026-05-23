@@ -41,7 +41,6 @@ export const PlanningSheetPreview = ({ data }) => {
         <table className="w-full text-[10px] border-collapse border border-black">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border border-black p-1">No of set</th>
               <th className="border border-black p-1">Set Length</th>
               <th className="border border-black p-1">Per Set</th>
               <th className="border border-black p-1">Ratio</th>
@@ -57,7 +56,6 @@ export const PlanningSheetPreview = ({ data }) => {
           <tbody>
             {data.warpingRows.map((row, i) => (
               <tr key={i}>
-                <td className="border border-black p-1 text-center">{row.noOfSet}</td>
                 <td className="border border-black p-1 text-center">{row.setLength}</td>
                 <td className="border border-black p-1 text-center">{row.perSet}</td>
                 <td className="border border-black p-1 text-center">{row.ratio}</td>
@@ -103,6 +101,7 @@ export const PlanningSheetPreview = ({ data }) => {
               <th className="border border-black p-1">Weave</th>
               <th className="border border-black p-1">Weft Ratio</th>
               <th className="border border-black p-1">Yarn Name</th>
+              <th className="border border-black p-1">Supplier</th>
               <th className="border border-black p-1">Supp-Lot</th>
               <th className="border border-black p-1">Reed Space</th>
               <th className="border border-black p-1">Reed</th>
@@ -123,6 +122,7 @@ export const PlanningSheetPreview = ({ data }) => {
                 <td className="border border-black p-1 text-center">{row.weave}</td>
                 <td className="border border-black p-1 text-center">{row.weftRatio}</td>
                 <td className="border border-black p-1 text-center">{row.yarnName}</td>
+                <td className="border border-black p-1 text-center">{row.supplier}</td>
                 <td className="border border-black p-1 text-center">{row.suppLot}</td>
                 <td className="border border-black p-1 text-center">{row.reedSpace}</td>
                 <td className="border border-black p-1 text-center">{row.reed}</td>
@@ -145,7 +145,7 @@ export const PlanningSheetPreview = ({ data }) => {
         <div className="text-xs p-2 border border-black min-h-[40px]">{data.remarks}</div>
       </div>
 
-      <div className="grid grid-cols-4 gap-8 text-center text-xs">
+      <div className="grid grid-cols-4 gap-8 text-center text-xs mt-40 pt-20">
         <div className="border-t border-black pt-2 font-bold">Prepared By</div>
         <div className="border-t border-black pt-2 font-bold">Checked By</div>
         <div className="border-t border-black pt-2 font-bold">AGM Dyeing</div>

@@ -12,16 +12,17 @@ import AllPlanningSheets from './pages/AllPlanningSheets';
 const ERPApp = () => {
   const [currentPage, setCurrentPage] = useState('order_receive');
   const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const { login, logout, session } = useAuth();
 
-  const isAdminRoute = useMemo(() => window.location.pathname === '/admin', []);
+  const isAdminRoute = window.location.pathname === '/admin';
 
   const renderERPPage = () => {
     switch (currentPage) {
-      case 'order_receive': return <OrderReceive />;
-      case 'planning_creation': return <PlanningSheetCreation />;
-      case 'all_planning': return <AllPlanningSheets />;
-      default: return <OrderReceive />;
+      case 'order_receive': return <OrderReceive currentPage={currentPage} onNavigate={setCurrentPage} />;
+      case 'planning_creation': return <PlanningSheetCreation currentPage={currentPage} onNavigate={setCurrentPage} />;
+      case 'all_planning': return <AllPlanningSheets currentPage={currentPage} onNavigate={setCurrentPage} />;
+      default: return <OrderReceive currentPage={currentPage} onNavigate={setCurrentPage} />;
     }
   };
 
@@ -39,18 +40,27 @@ const ERPApp = () => {
   return (
     <ProtectedRoute fallback={<LoginPage onLogin={login} />}>
       <div className="app-container">
+        {showAdminPanel && (
+          <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="relative w-full max-w-md">
+              <button
+                onClick={() => setShowAdminPanel(false)}
+                className="absolute -top-10 right-0 text-white/90 text-sm px-2 py-1"
+              >
+                Close
+              </button>
+              <AdminLogin onSuccess={() => { setAdminUnlocked(true); setShowAdminPanel(false); window.history.pushState({}, '', '/admin'); }} />
+            </div>
+          </div>
+        )}
+
         <div className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-xl border border-slate-300 bg-white/90 px-3 py-2 shadow">
+          <button onClick={() => setShowAdminPanel(true)} className="text-xs px-3 py-1 rounded bg-blue-600 text-white">Admin Panel</button>
           <span className="text-sm text-slate-700">Welcome, {session?.username}</span>
           <button onClick={logout} className="text-xs px-3 py-1 rounded bg-slate-900 text-white">Logout</button>
         </div>
 
         {renderERPPage()}
-
-        <div className="fixed bottom-6 right-6 flex gap-2 z-50 bg-slate-900/80 p-2 rounded-full backdrop-blur shadow-2xl border border-slate-700">
-          <button onClick={() => setCurrentPage('order_receive')} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${currentPage === 'order_receive' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:text-white'}`}>Order Receive</button>
-          <button onClick={() => setCurrentPage('planning_creation')} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${currentPage === 'planning_creation' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:text-white'}`}>Planning Creation</button>
-          <button onClick={() => setCurrentPage('all_planning')} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${currentPage === 'all_planning' ? 'bg-blue-600 text-white' : 'text-slate-300 hover:text-white'}`}>All Planning Sheets</button>
-        </div>
       </div>
     </ProtectedRoute>
   );

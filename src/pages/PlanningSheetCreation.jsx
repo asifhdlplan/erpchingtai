@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { OrderSearch } from '../components/planning/OrderSearch';
 import { PlanningSheetPreview } from '../components/planning/PlanningSheetPreview';
@@ -6,8 +6,9 @@ import { planningStorage } from '../services/planningStorage';
 import { usePlanningCalculations } from '../hooks/usePlanningCalculations';
 import { FormInput } from '../components/ui/FormInputs';
 
-const PlanningSheetCreation = () => {
+const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
   const { calculateWarpingQty, calculateWeavingQty } = usePlanningCalculations();
+  const entryAreaRef = useRef(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [formData, setFormData] = useState({
@@ -62,9 +63,7 @@ const PlanningSheetCreation = () => {
     
     // Auto calcs
     const setLength = parseFloat(formData.setLength) || 0;
-    if (field === 'noOfSet' || field === 'setLength') {
-      newRows[idx].perSet = (setLength / (parseFloat(val) || 1)).toFixed(2);
-    }
+    newRows[idx].perSet = setLength ? setLength.toFixed(2) : '0.00';
     
     const beam = parseFloat(newRows[idx].beam) || 0;
     const endsBeam = parseFloat(newRows[idx].endsBeam) || 0;
@@ -110,8 +109,43 @@ const PlanningSheetCreation = () => {
     alert('Planning Sheet Created Successfully!');
   };
 
+  const focusByOffset = (currentEl, offset) => {
+    const root = entryAreaRef.current;
+    if (!root) return;
+    const fields = Array.from(
+      root.querySelectorAll('input, select, textarea, button')
+    ).filter((el) => !el.disabled && !el.readOnly && el.type !== 'hidden' && el.tabIndex !== -1);
+    const idx = fields.indexOf(currentEl);
+    if (idx < 0) return;
+    const nextIdx = idx + offset;
+    if (nextIdx >= 0 && nextIdx < fields.length) {
+      fields[nextIdx].focus();
+      if (fields[nextIdx].select) fields[nextIdx].select();
+    }
+  };
+
+  const handleEntryKeyDown = (e) => {
+    const tag = e.target.tagName;
+    if (!['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(tag)) return;
+
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      focusByOffset(e.target, 1);
+      return;
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      focusByOffset(e.target, -1);
+      return;
+    }
+    if (e.key === 'Enter' && tag !== 'TEXTAREA' && !showPreview && selectedOrder) {
+      e.preventDefault();
+      handleCreatePlanningSheet();
+    }
+  };
+
   return (
-    <PageLayout>
+    <PageLayout currentPage={currentPage} onNavigate={onNavigate}>
       <header className="bg-white border-b p-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-black text-slate-800">Ha-Meem Ching Tai <span className="text-blue-600">Planning</span></h1>
@@ -149,7 +183,11 @@ const PlanningSheetCreation = () => {
             )}
 
             {selectedOrder && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div
+                ref={entryAreaRef}
+                onKeyDown={handleEntryKeyDown}
+                className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              >
                 <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                   <div className="flex items-center gap-2 mb-4 pb-2 border-b">
                     <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
@@ -192,7 +230,6 @@ const PlanningSheetCreation = () => {
                     <table className="w-full text-xs border-collapse">
                       <thead>
                         <tr className="bg-slate-50 text-slate-500">
-                          <th className="border p-2">No of set</th>
                           <th className="border p-2">Set Length</th>
                           <th className="border p-2">Per Set</th>
                           <th className="border p-2">Ratio</th>
@@ -209,8 +246,7 @@ const PlanningSheetCreation = () => {
                       <tbody>
                         {warpingRows.map((row, i) => (
                           <tr key={i}>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.noOfSet || ''} onChange={e => updateWarpingRow(i, 'noOfSet', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.setLength || formData.setLength} onChange={e => updateWarpingRow(i, 'setLength', e.target.value)} /></td>
+                            <td className="border p-1 bg-slate-50 text-center">{formData.setLength || '0'}</td>
                             <td className="border p-1 bg-slate-50 text-center">{row.perSet || '0'}</td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.ratio || ''} onChange={e => updateWarpingRow(i, 'ratio', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.yarnName || ''} onChange={e => updateWarpingRow(i, 'yarnName', e.target.value)} /></td>
@@ -257,6 +293,7 @@ const PlanningSheetCreation = () => {
                           <th className="border p-2">Weave</th>
                           <th className="border p-2">Weft Ratio</th>
                           <th className="border p-2">Yarn Name</th>
+                          <th className="border p-2">Supplier</th>
                           <th className="border p-2">Supp-Lot</th>
                           <th className="border p-2">Reed Space</th>
                           <th className="border p-2">Reed</th>
@@ -278,6 +315,7 @@ const PlanningSheetCreation = () => {
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.weave || ''} onChange={e => updateWeavingRow(i, 'weave', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.weftRatio || ''} onChange={e => updateWeavingRow(i, 'weftRatio', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.yarnName || ''} onChange={e => updateWeavingRow(i, 'yarnName', e.target.value)} /></td>
+                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.supplier || ''} onChange={e => updateWeavingRow(i, 'supplier', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.suppLot || ''} onChange={e => updateWeavingRow(i, 'suppLot', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.reedSpace || ''} onChange={e => updateWeavingRow(i, 'reedSpace', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.reed || ''} onChange={e => updateWeavingRow(i, 'reed', e.target.value)} /></td>

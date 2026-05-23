@@ -13,6 +13,7 @@ export const storageService = {
     } else {
       const newOrder = { ...order, id: Date.now().toString() };
       orders.push(newOrder);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
       return newOrder;
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
