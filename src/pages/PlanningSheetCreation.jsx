@@ -227,7 +227,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
                     </div>
                     <button onClick={() => setWarpingRows([...warpingRows, {}])} className="sap-btn text-xs px-2 py-1">+ ADD ROW</button>
                   </div>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto space-y-3">
                     <table className="w-full text-xs border-collapse">
                       <thead>
                         <tr className="bg-slate-50 text-slate-500">
@@ -293,19 +293,12 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
                           <th className="border p-2">Grey Construction</th>
                           <th className="border p-2">Weave</th>
                           <th className="border p-2">Weft Ratio</th>
-                          <th className="border p-2">Yarn Name</th>
-                          <th className="border p-2">Supplier</th>
-                          <th className="border p-2">Supp-Lot</th>
                           <th className="border p-2">Reed Space</th>
                           <th className="border p-2">Reed</th>
                           <th className="border p-2">Ends/Dent</th>
                           <th className="border p-2">G.Width</th>
                           <th className="border p-2">Weight</th>
                           <th className="border p-2">Selvedge</th>
-                          <th className="border p-2">Ratio</th>
-                          <th className="border p-2">Qty-Kg</th>
-                          <th className="border p-2">Pick Length</th>
-                          <th className="border p-2">PPI</th>
                           <th className="border p-2">Action</th>
                         </tr>
                       </thead>
@@ -315,20 +308,39 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.greyConstruction || ''} onChange={e => updateWeavingRow(i, 'greyConstruction', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.weave || ''} onChange={e => updateWeavingRow(i, 'weave', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.weftRatio || ''} onChange={e => updateWeavingRow(i, 'weftRatio', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.yarnName || ''} onChange={e => updateWeavingRow(i, 'yarnName', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.supplier || ''} onChange={e => updateWeavingRow(i, 'supplier', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.suppLot || ''} onChange={e => updateWeavingRow(i, 'suppLot', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.reedSpace || ''} onChange={e => updateWeavingRow(i, 'reedSpace', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.reed || ''} onChange={e => updateWeavingRow(i, 'reed', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.endsDent || ''} onChange={e => updateWeavingRow(i, 'endsDent', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.gWidth || ''} onChange={e => updateWeavingRow(i, 'gWidth', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.weight || ''} onChange={e => updateWeavingRow(i, 'weight', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.selvedge || ''} onChange={e => updateWeavingRow(i, 'selvedge', e.target.value)} /></td>
+                            <td className="border p-1 text-center"><button onClick={() => setWeavingRows(weavingRows.filter((_, idx) => idx !== i))} className="text-red-500">×</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-500">
+                          <th className="border p-2">Yarn Name</th>
+                          <th className="border p-2">Supplier</th>
+                          <th className="border p-2">Supp-Lot</th>
+                          <th className="border p-2">Ratio</th>
+                          <th className="border p-2">Qty-Kg</th>
+                          <th className="border p-2">Pick Length</th>
+                          <th className="border p-2">PPI</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {weavingRows.map((row, i) => (
+                          <tr key={`yarn-${i}`}>
+                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.yarnName || ''} onChange={e => updateWeavingRow(i, 'yarnName', e.target.value)} /></td>
+                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.supplier || ''} onChange={e => updateWeavingRow(i, 'supplier', e.target.value)} /></td>
+                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.suppLot || ''} onChange={e => updateWeavingRow(i, 'suppLot', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.ratio || ''} onChange={e => updateWeavingRow(i, 'ratio', e.target.value)} /></td>
                             <td className="border p-1 bg-slate-50 text-center font-bold">{row.qtyKg || '0'}</td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.pickLength || ''} onChange={e => updateWeavingRow(i, 'pickLength', e.target.value)} /></td>
                             <td className="border p-1"><input className="w-full p-1 outline-none" value={row.ppi || ''} onChange={e => updateWeavingRow(i, 'ppi', e.target.value)} /></td>
-                            <td className="border p-1 text-center"><button onClick={() => setWeavingRows(weavingRows.filter((_, idx) => idx !== i))} className="text-red-500">×</button></td>
                           </tr>
                         ))}
                       </tbody>

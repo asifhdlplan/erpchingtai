@@ -100,19 +100,12 @@ export const PlanningSheetPreview = ({ data }) => {
               <th className="border border-black p-1">Grey Construction</th>
               <th className="border border-black p-1">Weave</th>
               <th className="border border-black p-1">Weft Ratio</th>
-              <th className="border border-black p-1">Yarn Name</th>
-              <th className="border border-black p-1">Supplier</th>
-              <th className="border border-black p-1">Supp-Lot</th>
               <th className="border border-black p-1">Reed Space</th>
               <th className="border border-black p-1">Reed</th>
               <th className="border border-black p-1">Ends/Dent</th>
               <th className="border border-black p-1">G.Width</th>
               <th className="border border-black p-1">Weight</th>
               <th className="border border-black p-1">Selvedge</th>
-              <th className="border border-black p-1">Ratio</th>
-              <th className="border border-black p-1">Qty-Kg</th>
-              <th className="border border-black p-1">Pick Length</th>
-              <th className="border border-black p-1">PPI</th>
             </tr>
           </thead>
           <tbody>
@@ -121,15 +114,34 @@ export const PlanningSheetPreview = ({ data }) => {
                 <td className="border border-black p-1 text-center">{row.greyConstruction}</td>
                 <td className="border border-black p-1 text-center">{row.weave}</td>
                 <td className="border border-black p-1 text-center">{row.weftRatio}</td>
-                <td className="border border-black p-1 text-center">{row.yarnName}</td>
-                <td className="border border-black p-1 text-center">{row.supplier}</td>
-                <td className="border border-black p-1 text-center">{row.suppLot}</td>
                 <td className="border border-black p-1 text-center">{row.reedSpace}</td>
                 <td className="border border-black p-1 text-center">{row.reed}</td>
                 <td className="border border-black p-1 text-center">{row.endsDent}</td>
                 <td className="border border-black p-1 text-center">{row.gWidth}</td>
                 <td className="border border-black p-1 text-center">{row.weight}</td>
                 <td className="border border-black p-1 text-center">{row.selvedge}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <table className="w-full text-[10px] border-collapse border border-black mt-2">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border border-black p-1">Yarn Name</th>
+              <th className="border border-black p-1">Supplier</th>
+              <th className="border border-black p-1">Supp-Lot</th>
+              <th className="border border-black p-1">Ratio</th>
+              <th className="border border-black p-1">Qty-Kg</th>
+              <th className="border border-black p-1">Pick Length</th>
+              <th className="border border-black p-1">PPI</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.weavingRows.map((row, i) => (
+              <tr key={`weaving-yarn-${i}`}>
+                <td className="border border-black p-1 text-center">{row.yarnName}</td>
+                <td className="border border-black p-1 text-center">{row.supplier}</td>
+                <td className="border border-black p-1 text-center">{row.suppLot}</td>
                 <td className="border border-black p-1 text-center">{row.ratio}</td>
                 <td className="border border-black p-1 text-center">{row.qtyKg}</td>
                 <td className="border border-black p-1 text-center">{row.pickLength}</td>
