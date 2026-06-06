@@ -4,11 +4,14 @@ import { authenticateUser, initAuthData, logoutUser, validateSession } from '../
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  initAuthData();
   const [session, setSession] = useState(validateSession());
 
-  const login = (username, password) => {
-    const next = authenticateUser(username, password);
+  React.useEffect(() => {
+    initAuthData();
+  }, []);
+
+  const login = async (username, password) => {
+    const next = await authenticateUser(username, password);
     if (!next) return false;
     setSession(next);
     return true;

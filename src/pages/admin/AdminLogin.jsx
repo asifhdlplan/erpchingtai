@@ -5,20 +5,31 @@ const AdminLogin = ({ onSuccess }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     if (!password) return setError('Password is required.');
-    if (password !== authStorage.getAdminPassword()) return setError('Invalid admin password.');
+    const adminPwdVal = await authStorage.getAdminPassword();
+    if (password !== adminPwdVal) return setError('Invalid admin password.');
     onSuccess();
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-4">
-      <form onSubmit={submit} className="w-full max-w-sm p-6 rounded-xl border border-slate-700 bg-slate-900 shadow-xl">
-        <h2 className="text-xl font-bold">Admin Panel Access</h2>
-        <input type="password" value={password} onChange={(e) => { setPassword(e.target.value); setError(''); }} placeholder="Admin Password" className="mt-4 w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 outline-none focus:border-blue-500"/>
-        {error && <p className="text-red-300 text-sm mt-2">{error}</p>}
-        <button className="w-full mt-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-500">Enter Admin Panel</button>
+    <div className="min-h-screen flex items-center justify-center px-4 relative">
+      <form onSubmit={submit} className="w-full max-w-sm p-6 rounded-lg border border-slate-200/80 bg-white/95 shadow-2xl">
+        <h2 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-2">Admin Authentication</h2>
+        <p className="text-xs text-slate-500 mt-1">Please enter the administrative bypass password.</p>
+        
+        <input 
+          type="password" 
+          value={password} 
+          onChange={(e) => { setPassword(e.target.value); setError(''); }} 
+          placeholder="Admin Password" 
+          className="mt-4 w-full px-3 py-2 rounded border border-slate-300 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-950 text-sm"
+        />
+        {error && <p className="text-red-600 text-xs mt-2 font-medium">{`[ERROR] ${error}`}</p>}
+        <button className="w-full mt-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded shadow-sm transition-all">
+          Access Admin Dashboard
+        </button>
       </form>
     </div>
   );

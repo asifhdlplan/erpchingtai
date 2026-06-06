@@ -4,32 +4,268 @@
 
 @layer base {
   body {
-    @apply antialiased text-slate-900;
-    font-family: Tahoma, 'Segoe UI', Arial, sans-serif;
-    background: #e7edf5;
+    @apply antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-image: linear-gradient(rgba(248, 250, 252, 0.90), rgba(248, 250, 252, 0.90)), url('/loom.png');
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+    color: #1e293b;
+    min-height: 100vh;
   }
 }
 
-.sap-panel {
-  background: #f3f6fa;
-  border: 1px solid #b7c4d6;
+/* Global scrollbars */
+.app-container, main, aside, div {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+/* Inputs, Textareas and Selects overrides */
+input, select, textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 4px !important;
+  font-family: 'Inter', sans-serif !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Override placeholders */
+input::placeholder, textarea::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+/* Override labels */
+label {
+  color: #475569 !important; /* slate-600 */
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 500 !important;
+}
+
+/* Override tables and cells */
+table {
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+  background-color: #ffffff !important;
+}
+
+thead {
+  background-color: #f8fafc !important;
+}
+
+tr, th, td {
+  border-color: #e2e8f0 !important;
+}
+
+th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+tbody tr:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
   border-radius: 4px;
-  box-shadow: inset 0 1px 0 #fff;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ERP redefined classes */
+.sap-panel {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  backdrop-filter: blur(8px);
 }
 
 .sap-header {
-  background: linear-gradient(180deg, #d6e2f2 0%, #bfd1e8 100%);
-  border-bottom: 1px solid #9fb3cc;
+  background: rgba(255, 255, 255, 0.97) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  backdrop-filter: blur(8px);
 }
 
 .sap-btn {
-  background: linear-gradient(180deg, #f5f8fc 0%, #d8e3f1 100%);
-  border: 1px solid #8ea6c3;
-  color: #1f3c5e;
-  border-radius: 3px;
-  font-weight: 700;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  font-family: 'Inter', sans-serif !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .sap-btn:hover {
-  background: linear-gradient(180deg, #ffffff 0%, #dfe9f6 100%);
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Animations */
+@keyframes color-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-color-flow {
+  background: linear-gradient(
+    270deg,
+    #1d4ed8,
+    #2563eb,
+    #4f46e5,
+    #0891b2,
+    #1d4ed8
+  );
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: color-flow 6s ease infinite;
+  font-weight: 800;
+}
+
+@keyframes border-flow {
+  0%, 100% {
+    border-color: rgba(37, 99, 235, 0.4);
+  }
+  50% {
+    border-color: rgba(79, 70, 229, 0.4);
+  }
+}
+
+.animate-border-flow {
+  animation: border-flow 4s linear infinite;
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s infinite ease-in-out;
+}
+
+/* Print Overrides */
+@media print {
+  body {
+    background-image: none !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+}
+
+/* Dark Mode Overrides */
+html.dark body {
+  background-image: linear-gradient(rgba(15, 23, 42, 0.93), rgba(15, 23, 42, 0.93)), url('/loom.png');
+  color: #f8fafc;
+}
+
+html.dark .sap-panel {
+  background: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(51, 65, 85, 0.6) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+html.dark .sap-header {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border-color: rgba(51, 65, 85, 0.6) !important;
+}
+
+html.dark .sap-btn {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+  color: #f1f5f9 !important;
+}
+
+html.dark .sap-btn:hover {
+  background: #334155 !important;
+  border-color: #64748b !important;
+  color: #ffffff !important;
+}
+
+html.dark input, html.dark select, html.dark textarea {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+html.dark input:focus, html.dark select:focus, html.dark textarea:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+}
+
+html.dark label {
+  color: #94a3b8 !important;
+}
+
+html.dark table {
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+  background-color: #1e293b !important;
+}
+
+html.dark thead {
+  background-color: #0f172a !important;
+}
+
+html.dark tr, html.dark th, html.dark td {
+  border-color: #334155 !important;
+}
+
+html.dark th {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+}
+
+html.dark tbody tr:hover {
+  background-color: #334155 !important;
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }

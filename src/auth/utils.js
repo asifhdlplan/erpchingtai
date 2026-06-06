@@ -1,21 +1,32 @@
 import { authStorage } from './storage';
+import { supabase } from '../services/supabaseClient';
 
 const nowISO = () => new Date().toISOString();
 
 export const initAuthData = () => authStorage.ensureDefaults();
 
-export const authenticateUser = (username, password) => {
-  const users = authStorage.getUsers();
-  const match = users.find((u) => u.username.toLowerCase() === username.trim().toLowerCase() && u.password === password);
-  if (!match) return null;
+export const authenticateUser = async (username, password) => {
+  try {
+    const { data: user, error } = await supabase
+      .from('erp_users')
+      .select('*')
+      .eq('username', username.trim())
+      .maybeSingle();
 
-  const session = {
-    username: match.username,
-    employeeName: match.employeeName,
-    loginAt: nowISO()
-  };
-  authStorage.setSession(session);
-  return session;
+    if (error || !user) return null;
+    if (user.password !== password) return null;
+
+    const session = {
+      username: user.username,
+      employeeName: user.employeeName,
+      loginAt: nowISO()
+    };
+    authStorage.setSession(session);
+    return session;
+  } catch (e) {
+    console.error('Auth error:', e);
+    return null;
+  }
 };
 
 export const validateSession = () => {
@@ -26,37 +37,103 @@ export const validateSession = () => {
 
 export const logoutUser = () => authStorage.clearSession();
 
-export const createUser = ({ employeeName, username, password }) => {
-  const users = authStorage.getUsers();
-  const exists = users.some((u) => u.username.toLowerCase() === username.trim().toLowerCase());
-  if (exists) return { ok: false, message: 'Username already exists.' };
+export const createUser = async ({ employeeName, username, password }) => {
+  try {
+    const trimmedUsername = username.trim();
+    // Check if exists
+    const { data: existing } = await supabase
+      .from('erp_users')
+      .select('username')
+      .eq('username', trimmedUsername)
+      .maybeSingle();
 
-  const next = [...users, { employeeName: employeeName.trim(), username: username.trim(), password, createdAt: nowISO() }];
-  authStorage.saveUsers(next);
-  return { ok: true, users: next };
+    if (existing) {
+      return { ok: false, message: 'Username already exists.' };
+    }
+
+    const { error } = await supabase
+      .from('erp_users')
+      .insert({
+        employeeName: employeeName.trim(),
+        username: trimmedUsername,
+        password: password,
+        createdAt: nowISO()
+      });
+
+    if (error) throw error;
+
+    const users = await authStorage.getUsers();
+    return { ok: true, users };
+  } catch (e) {
+    console.error('Failed to create user:', e);
+    return { ok: false, message: e.message || 'Error occurred while creating user.' };
+  }
 };
 
-export const updateUser = (username, payload) => {
-  const users = authStorage.getUsers();
-  const idx = users.findIndex((u) => u.username === username);
-  if (idx < 0) return { ok: false, message: 'User not found.' };
+export const updateUser = async (username, payload) => {
+  try {
+    const trimmedNewUsername = payload.username.trim();
+    const trimmedEmployeeName = payload.employeeName.trim();
 
-  const duplicate = users.some((u, i) => i !== idx && u.username.toLowerCase() === payload.username.trim().toLowerCase());
-  if (duplicate) return { ok: false, message: 'Username already exists.' };
+    // Check if new username already exists for a different user
+    if (username !== trimmedNewUsername) {
+      const { data: existing } = await supabase
+        .from('erp_users')
+        .select('username')
+        .eq('username', trimmedNewUsername)
+        .maybeSingle();
 
-  users[idx] = { ...users[idx], employeeName: payload.employeeName.trim(), username: payload.username.trim() };
-  authStorage.saveUsers(users);
-  return { ok: true, users };
+      if (existing) {
+        return { ok: false, message: 'Username already exists.' };
+      }
+    }
+
+    const { error } = await supabase
+      .from('erp_users')
+      .update({
+        employeeName: trimmedEmployeeName,
+        username: trimmedNewUsername
+      })
+      .eq('username', username);
+
+    if (error) throw error;
+
+    const users = await authStorage.getUsers();
+    return { ok: true, users };
+  } catch (e) {
+    console.error('Failed to update user:', e);
+    return { ok: false, message: e.message || 'Error occurred while updating user.' };
+  }
 };
 
-export const resetUserPassword = (username, password) => {
-  const users = authStorage.getUsers().map((u) => (u.username === username ? { ...u, password } : u));
-  authStorage.saveUsers(users);
-  return users;
+export const resetUserPassword = async (username, password) => {
+  try {
+    const { error } = await supabase
+      .from('erp_users')
+      .update({ password })
+      .eq('username', username);
+
+    if (error) throw error;
+
+    return await authStorage.getUsers();
+  } catch (e) {
+    console.error('Failed to reset user password:', e);
+    return [];
+  }
 };
 
-export const deleteUser = (username) => {
-  const users = authStorage.getUsers().filter((u) => u.username !== username);
-  authStorage.saveUsers(users);
-  return users;
+export const deleteUser = async (username) => {
+  try {
+    const { error } = await supabase
+      .from('erp_users')
+      .delete()
+      .eq('username', username);
+
+    if (error) throw error;
+
+    return await authStorage.getUsers();
+  } catch (e) {
+    console.error('Failed to delete user:', e);
+    return [];
+  }
 };

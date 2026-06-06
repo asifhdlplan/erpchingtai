@@ -1,37 +1,71 @@
+import { supabase } from './supabaseClient';
+
 export const STORAGE_KEY = 'erp_orders_data';
 
 export const storageService = {
-  saveOrder: (order) => {
-    const orders = storageService.getAllOrders();
-    if (order.id) {
-      const index = orders.findIndex(o => o.id === order.id);
-      if (index !== -1) {
-        orders[index] = order;
-      } else {
-        orders.push(order);
-      }
-    } else {
-      const newOrder = { ...order, id: Date.now().toString() };
-      orders.push(newOrder);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-      return newOrder;
+  saveOrder: async (order) => {
+    try {
+      const orderId = order.id || Date.now().toString();
+      const orderData = {
+        ...order,
+        id: orderId,
+        createdAt: order.createdAt || new Date().toISOString()
+      };
+      
+      const { error } = await supabase
+        .from('erp_orders')
+        .upsert(orderData);
+
+      if (error) throw error;
+      return orderData;
+    } catch (e) {
+      console.error('Failed to save order:', e);
+      throw e;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-    return order;
   },
 
-  getAllOrders: () => {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+  getAllOrders: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('erp_orders')
+        .select('*')
+        .order('createdAt', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (e) {
+      console.error('Failed to get all orders:', e);
+      return [];
+    }
   },
 
-  deleteOrder: (id) => {
-    const orders = storageService.getAllOrders().filter(o => o.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+  deleteOrder: async (id) => {
+    try {
+      const { error } = await supabase
+        .from('erp_orders')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (e) {
+      console.error('Failed to delete order:', e);
+      throw e;
+    }
   },
 
-  getOrderById: (id) => {
-    const orders = storageService.getAllOrders();
-    return orders.find(o => o.id === id);
+  getOrderById: async (id) => {
+    try {
+      const { data, error } = await supabase
+        .from('erp_orders')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error('Failed to get order by ID:', e);
+      return null;
+    }
   }
 };

@@ -6,7 +6,7 @@ import { planningStorage } from '../services/planningStorage';
 import { usePlanningCalculations } from '../hooks/usePlanningCalculations';
 import { FormInput } from '../components/ui/FormInputs';
 
-const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
+const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick }) => {
   const { calculateWarpingQty, calculateWeavingQty } = usePlanningCalculations();
   const entryAreaRef = useRef(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -38,7 +38,11 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
   const [weavingRows, setWeavingRows] = useState([{}]);
 
   useEffect(() => {
-    setFormData(prev => ({ ...prev, setNo: planningStorage.getNextSetNo() }));
+    const fetchSetNo = async () => {
+      const nextSetNo = await planningStorage.getNextSetNo();
+      setFormData(prev => ({ ...prev, setNo: nextSetNo }));
+    };
+    fetchSetNo();
   }, []);
 
   const handleOrderSelect = (order) => {
@@ -88,16 +92,13 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
   };
 
   const handleSizingChange = (field, val) => {
-    const setLength = parseFloat(formData.setLength) || 0;
-    const noOfBeam = field === 'noOfBeam' ? parseFloat(val) : parseFloat(sizingData.noOfBeam);
     setSizingData(prev => ({
       ...prev,
-      [field]: val,
-      beamLength: noOfBeam ? (setLength / noOfBeam).toFixed(2) : ''
+      [field]: val
     }));
   };
 
-  const handleCreatePlanningSheet = () => {
+  const handleCreatePlanningSheet = async () => {
     const finalData = {
       ...formData,
       warpingRows,
@@ -105,9 +106,13 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
       weavingRows,
       orderId: selectedOrder?.id,
     };
-    planningStorage.savePlanningSheet(finalData);
-    setShowPreview(true);
-    alert('Planning Sheet Created Successfully!');
+    try {
+      await planningStorage.savePlanningSheet(finalData);
+      setShowPreview(true);
+      alert('Planning Sheet Created Successfully!');
+    } catch (e) {
+      alert('Failed to save planning sheet. Please check connection and settings.');
+    }
   };
 
   const focusByOffset = (currentEl, offset) => {
@@ -146,17 +151,20 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
   };
 
   return (
-    <PageLayout currentPage={currentPage} onNavigate={onNavigate}>
-      <header className="sap-header border-b border-[#9fb3cc] p-4 flex justify-between items-center">
+    <PageLayout currentPage={currentPage} onNavigate={onNavigate} onAdminClick={onAdminClick}>
+      <header className="sap-header border-b border-slate-200 p-4 flex justify-between items-center">
         <div>
-          <h1 className="text-lg font-bold text-[#1f3c5e]">Ha-Meem Ching Tai <span className="text-blue-700">Planning</span></h1>
-          <p className="text-[11px] font-bold text-[#3a5f86]">Planning Sheet Creation Module</p>
+          <h1 className="text-lg font-bold text-slate-900">Ha-Meem Ching Tai Pocketing & Accessories Ltd. <span className="text-blue-600">Planning</span></h1>
+          <p className="text-[10px] font-semibold text-slate-400 mt-0.5">
+            Polash, Narshingdi
+          </p>
+          <p className="text-[11px] font-semibold text-slate-500 mt-1 uppercase tracking-wider">Planning Sheet Creation Module</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           {showPreview && (
             <button 
               onClick={() => setShowPreview(false)} 
-              className="sap-btn px-4 py-2 text-xs"
+              className="px-4 py-2 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 text-slate-700 bg-white shadow-xs transition-all"
             >
               BACK TO EDIT
             </button>
@@ -164,7 +172,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
           {!showPreview && (
             <button 
               onClick={handleCreatePlanningSheet}
-              className="px-6 py-2 bg-[#0b4f8a] text-white text-xs font-bold border border-[#0a3d6a] rounded-sm"
+              className="px-6 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded shadow-sm transition-all"
             >
               CREATE PLANNING SHEET
             </button>
@@ -172,13 +180,13 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-6 bg-[#e7edf5] space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {!showPreview ? (
           <>
             <OrderSearch onOrderSelect={handleOrderSelect} />
             
             {!selectedOrder && (
-              <div className="text-center p-12 border-2 border-dashed border-slate-300 rounded-xl text-slate-400 italic">
+              <div className="text-center p-12 border border-slate-200 rounded-lg bg-white/70 backdrop-blur-xs text-slate-400 text-sm italic shadow-sm">
                 Please select an order from the search above to start planning.
               </div>
             )}
@@ -189,10 +197,10 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
                 onKeyDown={handleEntryKeyDown}
                 className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
               >
-                <section className="sap-panel p-4">
-                  <div className="flex items-center gap-2 mb-4 pb-2 border-b">
-                    <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
-                    <h2 className="text-sm font-bold text-slate-700 uppercase">Header Information</h2>
+                <section className="sap-panel p-5">
+                  <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+                    <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
+                    <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Header Information</h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <FormInput label="Set No" value={formData.setNo} className="opacity-70" readOnly />
@@ -219,45 +227,50 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
                   </div>
                 </section>
 
-                <section className="sap-panel p-4">
-                  <div className="flex items-center justify-between mb-4 pb-2 border-b">
+                <section className="sap-panel p-5">
+                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
                     <div className="flex items-center gap-2">
-                      <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
-                      <h2 className="text-sm font-bold text-slate-700 uppercase">01. Warping Information</h2>
+                      <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
+                      <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">01. Warping Information</h2>
                     </div>
-                    <button onClick={() => setWarpingRows([...warpingRows, {}])} className="sap-btn text-xs px-2 py-1">+ ADD ROW</button>
+                    <button 
+                      onClick={() => setWarpingRows([...warpingRows, {}])} 
+                      className="px-3 py-1 bg-slate-900 text-white hover:bg-slate-800 text-[10px] font-semibold rounded shadow-sm transition-all"
+                    >
+                      + ADD ROW
+                    </button>
                   </div>
-                  <div className="overflow-x-auto space-y-3">
+                  <div className="overflow-x-auto border border-slate-200 rounded-md">
                     <table className="w-full text-xs border-collapse">
                       <thead>
-                        <tr className="bg-slate-50 text-slate-500">
-                          <th className="border p-2">Set Length</th>
-                          <th className="border p-2">Per Set</th>
-                          <th className="border p-2">Ratio</th>
-                          <th className="border p-2">Yarn Name</th>
-                          <th className="border p-2">Supp.</th>
-                          <th className="border p-2">Yarn Lot</th>
-                          <th className="border p-2">Beam</th>
-                          <th className="border p-2">Ends/Beam</th>
-                          <th className="border p-2">Total Ends</th>
-                          <th className="border p-2">Qty-Kg</th>
-                          <th className="border p-2">Action</th>
+                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                          <th className="border-r border-slate-200 p-2">Set Length</th>
+                          <th className="border-r border-slate-200 p-2">Per Set</th>
+                          <th className="border-r border-slate-200 p-2">Ratio</th>
+                          <th className="border-r border-slate-200 p-2">Yarn Name</th>
+                          <th className="border-r border-slate-200 p-2">Supp.</th>
+                          <th className="border-r border-slate-200 p-2">Yarn Lot</th>
+                          <th className="border-r border-slate-200 p-2">Beam</th>
+                          <th className="border-r border-slate-200 p-2">Ends/Beam</th>
+                          <th className="border-r border-slate-200 p-2">Total Ends</th>
+                          <th className="border-r border-slate-200 p-2">Qty-Kg</th>
+                          <th className="p-2">Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {warpingRows.map((row, i) => (
-                          <tr key={i}>
-                            <td className="border p-1 bg-slate-50 text-center">{formData.setLength || '0'}</td>
-                            <td className="border p-1 bg-slate-50 text-center">{row.perSet || '0'}</td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.ratio || ''} onChange={e => updateWarpingRow(i, 'ratio', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.yarnName || ''} onChange={e => updateWarpingRow(i, 'yarnName', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.supp || ''} onChange={e => updateWarpingRow(i, 'supp', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.yarnLot || ''} onChange={e => updateWarpingRow(i, 'yarnLot', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.beam || ''} onChange={e => updateWarpingRow(i, 'beam', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.endsBeam || ''} onChange={e => updateWarpingRow(i, 'endsBeam', e.target.value)} /></td>
-                            <td className="border p-1 bg-slate-50 text-center font-bold">{row.totalEnds || '0'}</td>
-                            <td className="border p-1 bg-slate-50 text-center font-bold">{row.qtyKg || '0'}</td>
-                            <td className="border p-1 text-center"><button onClick={() => setWarpingRows(warpingRows.filter((_, idx) => idx !== i))} className="text-red-500">×</button></td>
+                          <tr key={i} className="hover:bg-slate-50/50 border-b border-slate-200 last:border-b-0">
+                            <td className="border-r border-slate-200 p-1 bg-slate-50 text-slate-500 text-center font-medium">{formData.setLength || '0'}</td>
+                            <td className="border-r border-slate-200 p-1 bg-slate-50 text-slate-500 text-center font-medium">{row.perSet || '0'}</td>
+                            <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded transition-all text-slate-900" value={row.ratio || ''} onChange={e => updateWarpingRow(i, 'ratio', e.target.value)} /></td>
+                            <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded transition-all text-slate-900" value={row.yarnName || ''} onChange={e => updateWarpingRow(i, 'yarnName', e.target.value)} /></td>
+                            <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded transition-all text-slate-900" value={row.supp || ''} onChange={e => updateWarpingRow(i, 'supp', e.target.value)} /></td>
+                            <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded transition-all text-slate-900" value={row.yarnLot || ''} onChange={e => updateWarpingRow(i, 'yarnLot', e.target.value)} /></td>
+                            <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded transition-all text-slate-900" value={row.beam || ''} onChange={e => updateWarpingRow(i, 'beam', e.target.value)} /></td>
+                            <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded transition-all text-slate-900" value={row.endsBeam || ''} onChange={e => updateWarpingRow(i, 'endsBeam', e.target.value)} /></td>
+                            <td className="border-r border-slate-200 p-1 bg-slate-50/70 text-center font-bold text-slate-800">{row.totalEnds || '0'}</td>
+                            <td className="border-r border-slate-200 p-1 bg-slate-50/70 text-center font-bold text-slate-800">{row.qtyKg || '0'}</td>
+                            <td className="p-1 text-center"><button onClick={() => setWarpingRows(warpingRows.filter((_, idx) => idx !== i))} className="text-slate-400 hover:text-red-600 font-bold font-mono text-base">×</button></td>
                           </tr>
                         ))}
                       </tbody>
@@ -265,86 +278,96 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
                   </div>
                 </section>
 
-                <section className="sap-panel p-4">
-                  <div className="flex items-center gap-2 mb-4 pb-2 border-b">
-                    <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
-                    <h2 className="text-sm font-bold text-slate-700 uppercase">02. Sizing Information</h2>
+                <section className="sap-panel p-5">
+                  <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+                    <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
+                    <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">02. Sizing Information</h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <FormInput label="Beam Space (inch)" value={sizingData.beamSpace} onChange={e => handleSizingChange('beamSpace', e.target.value)} />
                     <FormInput label="Beam Type" value={sizingData.beamType} onChange={e => handleSizingChange('beamType', e.target.value)} />
                     <FormInput label="No of Beam" value={sizingData.noOfBeam} onChange={e => handleSizingChange('noOfBeam', e.target.value)} />
-                    <FormInput label="Beam Length (m)" value={sizingData.beamLength} readOnly className="bg-slate-50 font-bold" />
+                    <FormInput label="Beam Length (m)" value={sizingData.beamLength} onChange={e => handleSizingChange('beamLength', e.target.value)} className="font-bold" />
                   </div>
                 </section>
 
-                <section className="sap-panel p-4">
-                  <div className="flex items-center justify-between mb-4 pb-2 border-b">
+                <section className="sap-panel p-5">
+                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
                     <div className="flex items-center gap-2">
-                      <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
-                      <h2 className="text-sm font-bold text-slate-700 uppercase">03. Weaving Information</h2>
+                      <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
+                      <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">03. Weaving Information</h2>
                     </div>
-                    <button onClick={() => setWeavingRows([...weavingRows, {}])} className="sap-btn text-xs px-2 py-1">+ ADD ROW</button>
+                    <button 
+                      onClick={() => setWeavingRows([...weavingRows, {}])} 
+                      className="px-3 py-1 bg-slate-900 text-white hover:bg-slate-800 text-[10px] font-semibold rounded shadow-sm transition-all"
+                    >
+                      + ADD ROW
+                    </button>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50 text-slate-500">
-                          <th className="border p-2">Grey Construction</th>
-                          <th className="border p-2">Weave</th>
-                          <th className="border p-2">Weft Ratio</th>
-                          <th className="border p-2">Reed Space</th>
-                          <th className="border p-2">Reed</th>
-                          <th className="border p-2">Ends/Dent</th>
-                          <th className="border p-2">G.Width</th>
-                          <th className="border p-2">Weight</th>
-                          <th className="border p-2">Selvedge</th>
-                          <th className="border p-2">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {weavingRows.map((row, i) => (
-                          <tr key={i}>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.greyConstruction || ''} onChange={e => updateWeavingRow(i, 'greyConstruction', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.weave || ''} onChange={e => updateWeavingRow(i, 'weave', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.weftRatio || ''} onChange={e => updateWeavingRow(i, 'weftRatio', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.reedSpace || ''} onChange={e => updateWeavingRow(i, 'reedSpace', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.reed || ''} onChange={e => updateWeavingRow(i, 'reed', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.endsDent || ''} onChange={e => updateWeavingRow(i, 'endsDent', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.gWidth || ''} onChange={e => updateWeavingRow(i, 'gWidth', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.weight || ''} onChange={e => updateWeavingRow(i, 'weight', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.selvedge || ''} onChange={e => updateWeavingRow(i, 'selvedge', e.target.value)} /></td>
-                            <td className="border p-1 text-center"><button onClick={() => setWeavingRows(weavingRows.filter((_, idx) => idx !== i))} className="text-red-500">×</button></td>
+                  <div className="overflow-x-auto space-y-4">
+                    <div className="border border-slate-200 rounded-md">
+                      <table className="w-full text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                            <th className="border-r border-slate-200 p-2">Grey Construction</th>
+                            <th className="border-r border-slate-200 p-2">Weave</th>
+                            <th className="border-r border-slate-200 p-2">Weft Ratio</th>
+                            <th className="border-r border-slate-200 p-2">Reed Space</th>
+                            <th className="border-r border-slate-200 p-2">Reed</th>
+                            <th className="border-r border-slate-200 p-2">Ends/Dent</th>
+                            <th className="border-r border-slate-200 p-2">G.Width</th>
+                            <th className="border-r border-slate-200 p-2">Weight</th>
+                            <th className="border-r border-slate-200 p-2">Selvedge</th>
+                            <th className="p-2">Action</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <table className="w-full text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50 text-slate-500">
-                          <th className="border p-2">Yarn Name</th>
-                          <th className="border p-2">Supplier</th>
-                          <th className="border p-2">Supp-Lot</th>
-                          <th className="border p-2">Ratio</th>
-                          <th className="border p-2">Qty-Kg</th>
-                          <th className="border p-2">Pick Length</th>
-                          <th className="border p-2">PPI</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {weavingRows.map((row, i) => (
-                          <tr key={`yarn-${i}`}>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.yarnName || ''} onChange={e => updateWeavingRow(i, 'yarnName', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.supplier || ''} onChange={e => updateWeavingRow(i, 'supplier', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.suppLot || ''} onChange={e => updateWeavingRow(i, 'suppLot', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.ratio || ''} onChange={e => updateWeavingRow(i, 'ratio', e.target.value)} /></td>
-                            <td className="border p-1 bg-slate-50 text-center font-bold">{row.qtyKg || '0'}</td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.pickLength || ''} onChange={e => updateWeavingRow(i, 'pickLength', e.target.value)} /></td>
-                            <td className="border p-1"><input className="w-full p-1 outline-none" value={row.ppi || ''} onChange={e => updateWeavingRow(i, 'ppi', e.target.value)} /></td>
+                        </thead>
+                        <tbody>
+                          {weavingRows.map((row, i) => (
+                            <tr key={i} className="hover:bg-slate-50/50 border-b border-slate-200 last:border-b-0">
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.greyConstruction || ''} onChange={e => updateWeavingRow(i, 'greyConstruction', e.target.value)} /></td>
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.weave || ''} onChange={e => updateWeavingRow(i, 'weave', e.target.value)} /></td>
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.weftRatio || ''} onChange={e => updateWeavingRow(i, 'weftRatio', e.target.value)} /></td>
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.reedSpace || ''} onChange={e => updateWeavingRow(i, 'reedSpace', e.target.value)} /></td>
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.reed || ''} onChange={e => updateWeavingRow(i, 'reed', e.target.value)} /></td>
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.endsDent || ''} onChange={e => updateWeavingRow(i, 'endsDent', e.target.value)} /></td>
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.gWidth || ''} onChange={e => updateWeavingRow(i, 'gWidth', e.target.value)} /></td>
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.weight || ''} onChange={e => updateWeavingRow(i, 'weight', e.target.value)} /></td>
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.selvedge || ''} onChange={e => updateWeavingRow(i, 'selvedge', e.target.value)} /></td>
+                              <td className="p-1 text-center"><button onClick={() => setWeavingRows(weavingRows.filter((_, idx) => idx !== i))} className="text-slate-400 hover:text-red-600 font-bold font-mono text-base">×</button></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="border border-slate-200 rounded-md">
+                      <table className="w-full text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                            <th className="border-r border-slate-200 p-2">Yarn Name</th>
+                            <th className="border-r border-slate-200 p-2">Supplier</th>
+                            <th className="border-r border-slate-200 p-2">Supp-Lot</th>
+                            <th className="border-r border-slate-200 p-2">Ratio</th>
+                            <th className="border-r border-slate-200 p-2">Qty-Kg</th>
+                            <th className="border-r border-slate-200 p-2">Pick Length</th>
+                            <th className="p-2">PPI</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {weavingRows.map((row, i) => (
+                            <tr key={`yarn-${i}`} className="hover:bg-slate-50/50 border-b border-slate-200 last:border-b-0">
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.yarnName || ''} onChange={e => updateWeavingRow(i, 'yarnName', e.target.value)} /></td>
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.supplier || ''} onChange={e => updateWeavingRow(i, 'supplier', e.target.value)} /></td>
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.suppLot || ''} onChange={e => updateWeavingRow(i, 'suppLot', e.target.value)} /></td>
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.ratio || ''} onChange={e => updateWeavingRow(i, 'ratio', e.target.value)} /></td>
+                              <td className="border-r border-slate-200 p-1 bg-slate-50/70 text-center font-bold text-slate-800">{row.qtyKg || '0'}</td>
+                              <td className="border-r border-slate-200 p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.pickLength || ''} onChange={e => updateWeavingRow(i, 'pickLength', e.target.value)} /></td>
+                              <td className="p-1"><input className="w-full p-1 outline-none text-xs border border-transparent hover:border-slate-200 focus:border-blue-500 bg-transparent rounded text-slate-900" value={row.ppi || ''} onChange={e => updateWeavingRow(i, 'ppi', e.target.value)} /></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </section>
               </div>
@@ -353,8 +376,11 @@ const PlanningSheetCreation = ({ currentPage, onNavigate }) => {
         ) : (
           <div className="flex flex-col items-center gap-6">
             <div className="flex gap-4">
-              <button onClick={() => window.print()} className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H//9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+              <button 
+                onClick={() => window.print()} 
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded shadow-md flex items-center gap-1.5 transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                 PRINT PLANNING SHEET
               </button>
             </div>

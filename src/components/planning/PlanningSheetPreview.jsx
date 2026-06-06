@@ -7,6 +7,7 @@ export const PlanningSheetPreview = ({ data }) => {
     <div className="print-only bg-white text-black p-8 w-[210mm] min-h-[297mm] mx-auto border shadow-lg" id="printable-sheet">
       <div className="text-center border-b-2 border-black pb-4 mb-6">
         <h1 className="text-2xl font-black uppercase">Ha-Meem Ching Tai Pocketing & Accessories Ltd.</h1>
+        <p className="text-xs font-semibold uppercase mt-1">Polash, Narshingdi</p>
         <h2 className="text-xl font-bold uppercase mt-2">Planning Sheet</h2>
       </div>
 
@@ -157,10 +158,12 @@ export const PlanningSheetPreview = ({ data }) => {
         <div className="text-xs p-2 border border-black min-h-[40px]">{data.remarks}</div>
       </div>
 
-      <div className="grid grid-cols-4 gap-8 text-center text-xs mt-40 pt-20">
+      <div className="grid grid-cols-6 gap-4 text-center text-[10px] mt-40 pt-20">
         <div className="border-t border-black pt-2 font-bold">Prepared By</div>
         <div className="border-t border-black pt-2 font-bold">Checked By</div>
+        <div className="border-t border-black pt-2 font-bold">AGM Weaving</div>
         <div className="border-t border-black pt-2 font-bold">AGM Dyeing</div>
+        <div className="border-t border-black pt-2 font-bold">QA Head</div>
         <div className="border-t border-black pt-2 font-bold">GM Plant</div>
       </div>
 

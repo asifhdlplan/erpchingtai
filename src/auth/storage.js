@@ -1,6 +1,6 @@
+import { supabase } from '../services/supabaseClient';
+
 export const STORAGE_KEYS = {
-  USERS: 'erp_users',
-  ADMIN_PASSWORD: 'erp_admin_password',
   SESSION: 'erp_active_session'
 };
 
@@ -15,19 +15,35 @@ const safeParse = (value, fallback) => {
 };
 
 export const authStorage = {
-  ensureDefaults() {
-    const admin = localStorage.getItem(STORAGE_KEYS.ADMIN_PASSWORD);
-    if (!admin) localStorage.setItem(STORAGE_KEYS.ADMIN_PASSWORD, DEFAULT_ADMIN_PASSWORD);
-    const users = localStorage.getItem(STORAGE_KEYS.USERS);
-    if (!users) localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([]));
+  async ensureDefaults() {
+    try {
+      const { data, error } = await supabase
+        .from('erp_settings')
+        .select('value')
+        .eq('key', 'admin_password')
+        .maybeSingle();
+
+      if (!data && !error) {
+        await supabase.from('erp_settings').insert({ key: 'admin_password', value: DEFAULT_ADMIN_PASSWORD });
+      }
+    } catch (e) {
+      console.error('Failed to ensure default settings:', e);
+    }
   },
 
-  getUsers() {
-    return safeParse(localStorage.getItem(STORAGE_KEYS.USERS), []);
-  },
+  async getUsers() {
+    try {
+      const { data, error } = await supabase
+        .from('erp_users')
+        .select('*')
+        .order('createdAt', { ascending: false });
 
-  saveUsers(users) {
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+      if (error) throw error;
+      return data || [];
+    } catch (e) {
+      console.error('Failed to get users:', e);
+      return [];
+    }
   },
 
   getSession() {
@@ -42,11 +58,33 @@ export const authStorage = {
     localStorage.removeItem(STORAGE_KEYS.SESSION);
   },
 
-  getAdminPassword() {
-    return localStorage.getItem(STORAGE_KEYS.ADMIN_PASSWORD) || DEFAULT_ADMIN_PASSWORD;
+  async getAdminPassword() {
+    try {
+      const { data, error } = await supabase
+        .from('erp_settings')
+        .select('value')
+        .eq('key', 'admin_password')
+        .maybeSingle();
+
+      if (error) throw error;
+      return data?.value || DEFAULT_ADMIN_PASSWORD;
+    } catch (e) {
+      console.error('Failed to get admin password:', e);
+      return DEFAULT_ADMIN_PASSWORD;
+    }
   },
 
-  setAdminPassword(password) {
-    localStorage.setItem(STORAGE_KEYS.ADMIN_PASSWORD, password);
+  async setAdminPassword(password) {
+    try {
+      const { error } = await supabase
+        .from('erp_settings')
+        .upsert({ key: 'admin_password', value: password });
+
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error('Failed to update admin password:', e);
+      return false;
+    }
   }
 };

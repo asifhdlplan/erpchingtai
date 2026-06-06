@@ -6,6 +6,8 @@ import LoginPage from './pages/auth/LoginPage';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import OrderReceive from './pages/OrderReceive';
+import ActiveOrders from './pages/ActiveOrders';
+import CompletedOrders from './pages/CompletedOrders';
 import PlanningSheetCreation from './pages/PlanningSheetCreation';
 import AllPlanningSheets from './pages/AllPlanningSheets';
 
@@ -13,16 +15,62 @@ const ERPApp = () => {
   const [currentPage, setCurrentPage] = useState('order_receive');
   const [adminUnlocked, setAdminUnlocked] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
   const { login, logout, session } = useAuth();
 
   const isAdminRoute = window.location.pathname === '/admin';
 
+  const handleNavigate = (page) => {
+    if (page === 'order_receive') {
+      setEditingOrder(null);
+    }
+    setCurrentPage(page);
+  };
+
   const renderERPPage = () => {
     switch (currentPage) {
-      case 'order_receive': return <OrderReceive currentPage={currentPage} onNavigate={setCurrentPage} />;
-      case 'planning_creation': return <PlanningSheetCreation currentPage={currentPage} onNavigate={setCurrentPage} />;
-      case 'all_planning': return <AllPlanningSheets currentPage={currentPage} onNavigate={setCurrentPage} />;
-      default: return <OrderReceive currentPage={currentPage} onNavigate={setCurrentPage} />;
+      case 'order_receive': 
+        return (
+          <OrderReceive 
+            currentPage={currentPage} 
+            onNavigate={handleNavigate} 
+            onAdminClick={() => setShowAdminPanel(true)} 
+            editingOrder={editingOrder}
+            setEditingOrder={setEditingOrder}
+          />
+        );
+      case 'active_orders':
+        return (
+          <ActiveOrders 
+            currentPage={currentPage} 
+            onNavigate={handleNavigate} 
+            onAdminClick={() => setShowAdminPanel(true)} 
+            onEditOrder={(order) => { setEditingOrder(order); setCurrentPage('order_receive'); }}
+          />
+        );
+      case 'completed_orders':
+        return (
+          <CompletedOrders 
+            currentPage={currentPage} 
+            onNavigate={handleNavigate} 
+            onAdminClick={() => setShowAdminPanel(true)} 
+            onEditOrder={(order) => { setEditingOrder(order); setCurrentPage('order_receive'); }}
+          />
+        );
+      case 'planning_creation': 
+        return <PlanningSheetCreation currentPage={currentPage} onNavigate={handleNavigate} onAdminClick={() => setShowAdminPanel(true)} />;
+      case 'all_planning': 
+        return <AllPlanningSheets currentPage={currentPage} onNavigate={handleNavigate} onAdminClick={() => setShowAdminPanel(true)} />;
+      default: 
+        return (
+          <OrderReceive 
+            currentPage={currentPage} 
+            onNavigate={handleNavigate} 
+            onAdminClick={() => setShowAdminPanel(true)} 
+            editingOrder={editingOrder}
+            setEditingOrder={setEditingOrder}
+          />
+        );
     }
   };
 
@@ -53,12 +101,6 @@ const ERPApp = () => {
             </div>
           </div>
         )}
-
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-xl border border-slate-300 bg-white/90 px-3 py-2 shadow">
-          <button onClick={() => setShowAdminPanel(true)} className="text-xs px-3 py-1 rounded bg-blue-600 text-white">Admin Panel</button>
-          <span className="text-sm text-slate-700">Welcome, {session?.username}</span>
-          <button onClick={logout} className="text-xs px-3 py-1 rounded bg-slate-900 text-white">Logout</button>
-        </div>
 
         {renderERPPage()}
       </div>
