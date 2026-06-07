@@ -1,8 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
-export const Sidebar = ({ currentPage, onNavigate, onAdminClick, isOpen, onClose }) => {
+export const PageLayout = ({ 
+  children, 
+  currentPage, 
+  onNavigate, 
+  onAdminClick,
+  status = { text: '', type: '' },
+  setStatus
+}) => {
   const { session, logout } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
+  const [treeExpanded, setTreeExpanded] = useState({
+    easyAccess: true,
+    logistics: true,
+    sales: true,
+    production: true,
+    materials: true,
+    infoSystems: true,
+    admin: false
+  });
+
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'light';
   });
@@ -21,212 +39,369 @@ export const Sidebar = ({ currentPage, onNavigate, onAdminClick, isOpen, onClose
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
 
-  const navItems = [
-    { key: 'order_receive', label: 'Order Receive' },
-    { key: 'active_orders', label: 'Active Orders' },
-    { key: 'completed_orders', label: 'Completed Orders' },
-    { key: 'planning_creation', label: 'Planning Creation' },
-    { key: 'all_planning', label: 'All Planning Sheets' }
-  ];
 
-  const handleNavClick = (key) => {
-    onNavigate?.(key);
-    onClose?.(); // Close mobile drawer after navigation
+
+  const getTransactionInfo = () => {
+    switch (currentPage) {
+      case 'order_receive':
+        return { code: 'VA01', title: 'Create Sales Order' };
+      case 'active_orders':
+        return { code: 'VA05', title: 'Active Sales Orders List' };
+      case 'completed_orders':
+        return { code: 'VA05_COMP', title: 'Completed Sales Orders Archive' };
+      case 'planning_creation':
+        return { code: 'CO01', title: 'Create Production Sizing Plan' };
+      case 'all_planning':
+        return { code: 'COOIS', title: 'Production Plan Archive' };
+      case 'admin_dashboard':
+        return { code: 'SU01', title: 'User Maintenance & Access' };
+      case 'activity_overview':
+        return { code: 'ZACT', title: 'System Activity Overview' };
+      case 'yarn_stock_overview':
+        return { code: 'MMBE', title: 'Yarn Warehouse Stock Status' };
+      case 'yarn_stock_entry':
+        return { code: 'MIGO', title: 'Yarn Stock Goods Receipt' };
+      case 'sap_easy_access':
+      default:
+        return { code: 'Home', title: 'Main Menu Gateway' };
+    }
+  };
+
+  const currentInfo = getTransactionInfo();
+
+  const toggleFolder = (folder) => {
+    setTreeExpanded(prev => ({ ...prev, [folder]: !prev[folder] }));
   };
 
   return (
-    <>
-      {/* Mobile Overlay Backdrop */}
-      {isOpen && (
-        <div 
-          onClick={onClose}
-          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs md:hidden transition-opacity duration-300"
-        />
-      )}
-
-      {/* Sidebar Container */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-100 flex flex-col border-r border-slate-800 select-none transition-transform duration-300 md:static md:translate-x-0 ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        {/* Logo block */}
-        <div className="p-4 border-b border-slate-800 flex flex-col gap-2 relative">
-          {/* Mobile drawer close button */}
+    <div className="flex flex-col h-screen select-none bg-slate-50 dark:bg-[#0B0F19] text-slate-800 dark:text-slate-100 font-sans">
+      {/* 1. Modern Top Navigation Bar */}
+      <header className="h-14 bg-white dark:bg-[#151D30] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 z-40 shadow-xs">
+        <div className="flex items-center gap-3">
+          {/* Collapse Sidebar Button */}
           <button 
-            onClick={onClose}
-            className="absolute top-4 right-4 md:hidden text-slate-400 hover:text-white p-1"
-            title="Close Drawer"
+            onClick={() => setIsSidebarOpen(prev => !prev)}
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition"
+            title="Toggle Menu Sidebar"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
           
-          <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="HCT ERP Logo" className="w-10 h-10 object-contain" />
-            <h1 className="text-lg font-bold tracking-tight text-white leading-none">
-              HCT <span className="text-blue-400 block text-[10px] tracking-widest mt-0.5">ERP</span>
-            </h1>
+          {/* Logo & Branding */}
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
+            <span className="font-extrabold text-sm tracking-wider uppercase text-blue-600 dark:text-blue-400 font-sans">
+              Ha-meem Ching Tai
+            </span>
           </div>
-          <div>
-            <span className="inline-block text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full border border-blue-500/20 bg-blue-950/30 shadow-sm animate-pulse-soft animate-color-flow animate-border-flow whitespace-nowrap">
-              Created By Asif
+          
+          <div className="hidden md:flex w-[1px] h-6 bg-slate-200 dark:bg-slate-700 mx-2"></div>
+          
+          {/* Active Breadcrumb */}
+          <div className="hidden md:flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
+              {currentInfo.title}
             </span>
           </div>
         </div>
 
-        {/* User / Session Information Card */}
-        <div className="p-3 mx-3 mt-3 rounded border border-slate-800 bg-slate-950/20 shadow-sm flex flex-col gap-2">
-          <div className="text-xs text-slate-300 font-semibold flex flex-col gap-1">
-            <span className="text-[9px] uppercase text-slate-500 font-extrabold tracking-wider">Active Session</span>
-            <span className="text-blue-400 font-bold flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-              </svg>
-              {session?.username}
-            </span>
-          </div>
 
-          <div className="flex justify-between items-center py-1.5 border-t border-slate-800">
-            <span className="text-[9px] uppercase text-slate-500 font-extrabold tracking-wider">Appearance</span>
-            <button 
-              onClick={toggleTheme}
-              className="text-[10px] font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 transition-colors focus:outline-none"
-            >
-              {theme === 'dark' ? (
-                <>
-                  <span className="text-amber-400 text-xs">☀️</span> Light
-                </>
-              ) : (
-                <>
-                  <span className="text-indigo-400 text-xs">🌙</span> Dark
-                </>
-              )}
-            </button>
-          </div>
 
-          <div className="flex flex-col gap-1.5 pt-1.5 border-t border-slate-800">
-            <button 
-              onClick={() => { onAdminClick?.(); onClose?.(); }}
-              className="w-full text-center text-[10px] font-bold py-1.5 px-2 rounded-sm border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white hover:border-slate-600 transition-all uppercase tracking-wider"
-            >
-              Admin Panel
-            </button>
-            <button 
-              onClick={() => { logout(); onClose?.(); }}
-              className="w-full text-center text-[10px] font-bold py-1.5 px-2 rounded-sm border border-red-950/40 bg-red-950/10 text-red-400 hover:bg-red-950/20 hover:border-red-500 transition-all uppercase tracking-wider"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-
-        {/* Navigation block */}
-        <nav className="flex-1 p-3 mt-2 space-y-1.5">
-          {navItems.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => handleNavClick(item.key)}
-              className={`w-full text-left px-3 py-2.5 rounded text-xs font-semibold border transition-all ${
-                currentPage === item.key 
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
-                  : 'bg-transparent text-slate-400 border-transparent hover:bg-slate-800/50 hover:text-slate-200'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-
-        {/* Contact Support Section */}
-        <div className="p-3 border-t border-slate-800 bg-slate-950/20 flex flex-col gap-2">
-          <div className="text-[9px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-            <svg className="w-3 h-3 text-blue-400 animate-pulse-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            <span>if face any issue pls contact :</span>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            {/* WhatsApp */}
-            <a
-              href="https://wa.me/8801748460707"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded border border-emerald-950/40 bg-emerald-950/10 text-emerald-400 hover:bg-emerald-950/20 hover:border-emerald-500 hover:text-white transition-all text-[10px] font-bold"
-            >
-              <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" clipRule="evenodd" d="M12.012 2C6.506 2 2.023 6.478 2.022 11.984a9.96 9.96 0 001.335 4.978L2 22l5.177-1.356A9.897 9.897 0 0012.01 22c5.506 0 9.989-4.478 9.99-9.984C22 6.507 17.518 2 12.012 2zm6.36 13.917c-.278.786-1.624 1.5-2.22 1.567-.544.062-1.25.1-3.666-.897-3.09-1.274-5.07-4.414-5.224-4.62-.154-.206-1.25-1.66-1.25-3.168 0-1.508.788-2.25 1.066-2.544.278-.293.608-.36.81-.36.202 0 .405.002.582.01.185.008.43-.075.674.514.248.6.843 2.062.918 2.213.074.152.124.327.024.526-.1.2-.15.326-.298.502-.149.176-.312.392-.446.526-.149.15-.306.313-.13.614.177.302.788 1.298 1.688 2.098.9 1 1.66 1.31 1.96 1.46.3.15.474.125.652-.075.177-.2.756-.88.958-1.18.203-.3.405-.25.684-.15.278.1.1.758.82.909.72.15 1.216.604 1.393.754.177.15.354.225.278.425z" fill="#25D366"/>
-              </svg>
-              <span>WhatsApp Chat</span>
-            </a>
-
-            {/* Email */}
-            <a
-              href="mailto:asifjahandesh@gmail.com"
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded border border-red-950/40 bg-red-950/10 text-red-400 hover:bg-red-950/20 hover:border-red-500 hover:text-white transition-all text-[10px] font-bold"
-            >
-              <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" fill="#EA4335"/>
-                <polyline points="22,6 12,13 2,6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span>Email Support</span>
-            </a>
-
-            {/* LinkedIn */}
-            <a
-              href="https://www.linkedin.com/in/mdasifjahan"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded border border-blue-950/40 bg-blue-950/10 text-blue-400 hover:bg-blue-950/20 hover:border-blue-500 hover:text-white transition-all text-[10px] font-bold"
-            >
-              <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" clipRule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" fill="#0A66C2"/>
-              </svg>
-              <span>LinkedIn Profile</span>
-            </a>
-          </div>
-        </div>
-      </aside>
-    </>
-  );
-};
-
-export const PageLayout = ({ children, currentPage, onNavigate, onAdminClick }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  return (
-    <div className="flex h-screen overflow-hidden relative">
-      <Sidebar 
-        currentPage={currentPage} 
-        onNavigate={onNavigate} 
-        onAdminClick={onAdminClick} 
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
-      <main className="flex-1 flex flex-col overflow-hidden w-full">
-        {/* Mobile Header Toggle Bar */}
-        <header className="h-12 bg-slate-900 border-b border-slate-800 px-4 flex items-center md:hidden justify-between z-30 select-none">
+        {/* Right Section: System Actions & Profile */}
+        <div className="flex items-center gap-4 text-xs font-medium">
+          {/* Theme Toggle Button */}
           <button 
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-1.5 text-slate-400 hover:text-white transition-all"
-            title="Open Menu"
+            onClick={toggleTheme}
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+            {theme === 'dark' ? (
+              <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </button>
+
+          <div className="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></div>
+
+          {/* User Badge */}
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+              {session?.username?.slice(0, 2) || 'AS'}
+            </div>
+            <div className="hidden lg:flex flex-col text-left">
+              <span className="font-semibold text-slate-700 dark:text-slate-200 leading-tight">
+                {session?.username || 'ASIF'}
+              </span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                 Narshingdi Plant
+              </span>
+            </div>
+          </div>
+
+          {/* Logoff Button */}
+          <button 
+            onClick={logout}
+            className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition font-semibold"
+            title="Log off"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
           </button>
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="HCT ERP Logo" className="w-6 h-6 object-contain" />
-            <span className="text-xs font-black text-white uppercase tracking-wider">HCT ERP</span>
-          </div>
-          <div className="w-8"></div> {/* Balance spacer */}
-        </header>
-
-        {/* Scrollable Main Area Container */}
-        <div className="flex-1 overflow-y-auto flex flex-col">
-          {children}
         </div>
-      </main>
+      </header>
+
+      {/* 2. Main Workspace and Sidebar Area */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile Sidebar Backdrop */}
+        {isSidebarOpen && (
+          <div 
+            onClick={() => setIsSidebarOpen(false)}
+            className="md:hidden fixed inset-0 top-14 bg-black/40 z-20"
+          />
+        )}
+
+        {/* Navigation Sidebar */}
+        {isSidebarOpen && (
+          <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col select-none overflow-y-auto shrink-0 z-30 shadow-lg fixed md:relative top-14 bottom-0 left-0 md:top-0 md:bottom-0">
+            <div className="p-3 border-b border-slate-800/80 bg-slate-950/40 text-xs font-bold text-slate-400 flex items-center gap-2">
+              <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+              <span>Navigation Menu</span>
+            </div>
+
+            {/* Folder Tree listing */}
+            <div className="p-3 space-y-1 font-sans text-xs flex-1">
+              {/* Home / Easy Access Menu */}
+              <div 
+                onClick={() => onNavigate('sap_easy_access')}
+                className={`flex items-center gap-2.5 py-2 px-3 rounded-lg cursor-pointer transition ${currentPage === 'sap_easy_access' ? 'bg-blue-600 text-white font-bold' : 'hover:bg-slate-800 hover:text-white'}`}
+              >
+                <span>🏠</span>
+                <span>ERP Portal Home</span>
+              </div>
+
+              <div className="h-[1px] bg-slate-800 my-2"></div>
+
+              {/* Logistics Folder */}
+              <div>
+                <div 
+                  className="flex items-center justify-between gap-1 py-1.5 px-2 hover:bg-slate-800/50 hover:text-white cursor-pointer font-bold rounded"
+                  onClick={() => toggleFolder('logistics')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-400 text-sm">📦</span>
+                    <span>Logistics</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500">{treeExpanded.logistics ? '▼' : '▶'}</span>
+                </div>
+
+                {treeExpanded.logistics && (
+                  <div className="pl-3 border-l border-slate-800 space-y-1 mt-1 ml-3">
+                    {/* Sales & Distribution */}
+                    <div>
+                      <div 
+                        className="flex items-center justify-between gap-1 py-1 px-2 hover:bg-slate-800/50 hover:text-white cursor-pointer font-semibold rounded text-[11px]"
+                        onClick={() => toggleFolder('sales')}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-slate-500">🛍</span>
+                          <span>Sales & Distribution</span>
+                        </div>
+                        <span className="text-[9px] text-slate-500">{treeExpanded.sales ? '▼' : '▶'}</span>
+                      </div>
+
+                      {treeExpanded.sales && (
+                        <div className="pl-3 border-l border-slate-850 space-y-0.5 mt-0.5 ml-2">
+                          <div 
+                            onClick={() => onNavigate('order_receive')}
+                            className={`sap-tree-item ${currentPage === 'order_receive' ? 'active' : ''}`}
+                          >
+                            Order Receive
+                          </div>
+                          <div 
+                            onClick={() => onNavigate('active_orders')}
+                            className={`sap-tree-item ${currentPage === 'active_orders' ? 'active' : ''}`}
+                          >
+                            Active Orders
+                          </div>
+                          <div 
+                            onClick={() => onNavigate('completed_orders')}
+                            className={`sap-tree-item ${currentPage === 'completed_orders' ? 'active' : ''}`}
+                          >
+                            Completed Orders
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Production Planning */}
+                    <div>
+                      <div 
+                        className="flex items-center justify-between gap-1 py-1 px-2 hover:bg-slate-800/50 hover:text-white cursor-pointer font-semibold rounded text-[11px]"
+                        onClick={() => toggleFolder('production')}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-slate-500">🏭</span>
+                          <span>Production Planning</span>
+                        </div>
+                        <span className="text-[9px] text-slate-500">{treeExpanded.production ? '▼' : '▶'}</span>
+                      </div>
+
+                      {treeExpanded.production && (
+                        <div className="pl-3 border-l border-slate-850 space-y-0.5 mt-0.5 ml-2">
+                          <div 
+                            onClick={() => onNavigate('planning_creation')}
+                            className={`sap-tree-item ${currentPage === 'planning_creation' ? 'active' : ''}`}
+                          >
+                            Sizing Plan Creation
+                          </div>
+                          <div 
+                            onClick={() => onNavigate('all_planning')}
+                            className={`sap-tree-item ${currentPage === 'all_planning' ? 'active' : ''}`}
+                          >
+                            Sizing Plan Archive
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Materials Management (Warehouse) */}
+                    <div>
+                      <div 
+                        className="flex items-center justify-between gap-1 py-1 px-2 hover:bg-slate-800/50 hover:text-white cursor-pointer font-semibold rounded text-[11px]"
+                        onClick={() => toggleFolder('materials')}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-slate-500">📦</span>
+                          <span>Materials Management</span>
+                        </div>
+                        <span className="text-[9px] text-slate-500">{treeExpanded.materials ? '▼' : '▶'}</span>
+                      </div>
+
+                      {treeExpanded.materials && (
+                        <div className="pl-3 border-l border-slate-850 space-y-0.5 mt-0.5 ml-2">
+                          <div 
+                            onClick={() => onNavigate('yarn_stock_entry')}
+                            className={`sap-tree-item ${currentPage === 'yarn_stock_entry' ? 'active' : ''}`}
+                          >
+                            Yarn Stock Entry
+                          </div>
+                          <div 
+                            onClick={() => onNavigate('yarn_stock_overview')}
+                            className={`sap-tree-item ${currentPage === 'yarn_stock_overview' ? 'active' : ''}`}
+                          >
+                            Yarn Stock Status
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Information Systems */}
+              <div>
+                <div 
+                  className="flex items-center justify-between gap-1 py-1.5 px-2 hover:bg-slate-800/50 hover:text-white cursor-pointer font-bold rounded"
+                  onClick={() => toggleFolder('infoSystems')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-indigo-400 text-sm">📊</span>
+                    <span>Info Systems</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500">{treeExpanded.infoSystems ? '▼' : '▶'}</span>
+                </div>
+
+                {treeExpanded.infoSystems && (
+                  <div className="pl-3 border-l border-slate-800 space-y-1 mt-1 ml-3">
+                    <div 
+                      onClick={() => onNavigate('activity_overview')}
+                      className={`sap-tree-item ${currentPage === 'activity_overview' ? 'active' : ''}`}
+                    >
+                      Activity Overview
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Administration */}
+              <div>
+                <div 
+                  className="flex items-center justify-between gap-1 py-1.5 px-2 hover:bg-slate-800/50 hover:text-white cursor-pointer font-bold rounded"
+                  onClick={() => toggleFolder('admin')}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-amber-400 text-sm">🛡</span>
+                    <span>Administration</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500">{treeExpanded.admin ? '▼' : '▶'}</span>
+                </div>
+
+                {treeExpanded.admin && (
+                  <div className="pl-3 border-l border-slate-800 space-y-1 mt-1 ml-3">
+                    <div 
+                      onClick={() => onNavigate('admin_dashboard')}
+                      className={`sap-tree-item ${currentPage === 'admin_dashboard' ? 'active' : ''}`}
+                    >
+                      User Maintenance
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Sidebar Contact Footer */}
+            <div className="p-3 border-t border-slate-800 bg-slate-950/20 text-[10px] text-slate-500 space-y-1.5">
+              <div className="font-bold uppercase tracking-wider text-slate-400 pb-0.5 border-b border-slate-800">Support Panel</div>
+              <div className="flex items-center gap-1.5"><span>📞</span><span>WA: +8801748460707</span></div>
+              <div className="flex items-center gap-1.5"><span>✉️</span><span>asifjahandesh@gmail.com</span></div>
+              <div className="flex items-center gap-1.5"><span>💼</span><span>LI: mdasifjahan</span></div>
+            </div>
+          </aside>
+        )}
+
+        {/* Main Content Pane */}
+        <main className="flex-1 flex flex-col overflow-hidden bg-slate-50 dark:bg-[#0B0F19]">
+          {children}
+        </main>
+      </div>
+
+      {/* 3. Sleek Toast Status Bar (Bottom Strip) */}
+      <footer className="h-7 bg-white dark:bg-[#151D30] border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 text-[11px] text-slate-500 dark:text-slate-400 select-none z-40">
+        <div className="flex items-center gap-2 font-medium">
+          {status.text ? (
+            <div className="flex items-center gap-1.5 animate-pulse">
+              {status.type === 'S' && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
+              {status.type === 'E' && <span className="w-2 h-2 rounded-full bg-rose-500"></span>}
+              {status.type === 'W' && <span className="w-2 h-2 rounded-full bg-amber-500"></span>}
+              <span className={`font-semibold ${status.type === 'S' ? 'text-emerald-600 dark:text-emerald-400' : status.type === 'E' ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                {status.text}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span>System Core Ready</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4 font-mono text-[10px] tracking-wider">
+          <span>SYS: <span className="font-semibold text-slate-700 dark:text-slate-300">CT1</span></span>
+          <span>CLIENT: <span className="font-semibold text-slate-700 dark:text-slate-300">300</span></span>
+          <span>USER: <span className="font-semibold text-blue-600 dark:text-blue-400">{session?.username || 'ASIF'}</span></span>
+          <span>LANGUAGE: <span className="font-semibold text-slate-700 dark:text-slate-300">EN</span></span>
+        </div>
+      </footer>
     </div>
   );
 };

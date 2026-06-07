@@ -93,9 +93,31 @@ create policy "Allow all actions for anon on erp_orders" on erp_orders
 create policy "Allow all actions for anon on erp_planning_sheets" on erp_planning_sheets
   for all to anon using (true) with check (true);
 
+-- 5. Create erp_yarn_stock table
+create table if not exists erp_yarn_stock (
+  id text primary key,
+  plant text,
+  "storageLocation" text,
+  "materialDescription" text,
+  unit text,
+  "supplierName" text,
+  "supplierLot" text,
+  "unrestrictedStock" numeric default 0,
+  "lastGoodsReceiptDate" text,
+  "createdAt" timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS on erp_yarn_stock
+alter table erp_yarn_stock enable row level security;
+
+-- Create policy for erp_yarn_stock
+create policy "Allow all actions for anon on erp_yarn_stock" on erp_yarn_stock
+  for all to anon using (true) with check (true);
+
 -- =========================================================================
 -- DEFAULT ADMIN SEED
 -- =========================================================================
 insert into erp_settings (key, value)
 values ('admin_password', '0707')
 on conflict (key) do nothing;
+

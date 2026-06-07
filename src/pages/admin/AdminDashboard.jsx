@@ -1,46 +1,60 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { PageLayout } from '../../components/layout/PageLayout';
 import { authStorage } from '../../auth/storage';
 import { createUser, deleteUser, resetUserPassword, updateUser } from '../../auth/utils';
 
-const UserManagementTable = ({ users, onEdit, onDelete, onReset }) => (
-  <div className="overflow-auto border border-slate-200 rounded bg-white shadow-sm">
-    <table className="w-full text-sm">
-      <thead className="bg-slate-50 text-slate-600 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider">
-        <tr>
-          <th className="p-3 text-left">Employee Name</th>
-          <th className="p-3 text-left">Username</th>
-          <th className="p-3 text-left">Created Date</th>
-          <th className="p-3 text-center">Actions</th>
+const UserManagementTable = ({ users, onEdit, onDelete, onReset, selectedRowId, setSelectedRowId }) => (
+  <div className="overflow-auto border border-[#B8C2CC] bg-white">
+    <table className="sap-alv-table border-collapse">
+      <thead>
+        <tr className="bg-[#E8EDF5] border-b border-[#B8C2CC]">
+          <th className="w-8 text-center border-r border-[#B8C2CC]">Sel</th>
+          <th className="border-r border-[#B8C2CC]">Employee Name</th>
+          <th className="border-r border-[#B8C2CC]">Username</th>
+          <th className="border-r border-[#B8C2CC]">Created Date</th>
+          <th className="text-center w-52">Actions</th>
         </tr>
       </thead>
-      <tbody className="text-xs text-slate-700">
+      <tbody>
         {users.length === 0 ? (
           <tr>
-            <td colSpan="4" className="p-6 text-center text-slate-400 italic">No users found.</td>
+            <td colSpan="5" className="p-4 text-center text-slate-400 italic">No users found.</td>
           </tr>
         ) : (
           users.map((u) => (
-            <tr key={u.username} className="border-t border-slate-200 hover:bg-slate-50 transition-colors">
-              <td className="p-3 font-semibold text-slate-900">{u.employeeName}</td>
-              <td className="p-3 font-mono text-slate-600">{u.username}</td>
-              <td className="p-3 text-slate-500">{new Date(u.createdAt).toLocaleString()}</td>
-              <td className="p-3">
-                <div className="flex justify-center gap-2">
+            <tr 
+              key={u.username} 
+              onClick={() => setSelectedRowId(u.username)}
+              className={`cursor-pointer ${selectedRowId === u.username ? 'sap-selected' : ''}`}
+            >
+              <td className="text-center border-r border-[#B8C2CC]">
+                <input 
+                  type="radio" 
+                  name="user_select"
+                  checked={selectedRowId === u.username}
+                  onChange={() => setSelectedRowId(u.username)}
+                />
+              </td>
+              <td className="font-bold text-slate-900 border-r border-[#B8C2CC]">{u.employeeName}</td>
+              <td className="font-mono text-slate-700 border-r border-[#B8C2CC]">{u.username}</td>
+              <td className="text-slate-500 border-r border-[#B8C2CC] font-mono">{new Date(u.createdAt).toLocaleString()}</td>
+              <td className="p-0 text-center">
+                <div className="flex items-center justify-center h-[22px]">
                   <button 
-                    onClick={() => onEdit(u)} 
-                    className="px-2.5 py-1 text-xs border border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 rounded font-medium transition-all"
+                    onClick={(e) => { e.stopPropagation(); onEdit(u); }} 
+                    className="text-blue-700 hover:bg-blue-50 px-2 py-0.5 text-[10px] font-bold border-r border-[#E5E7EB] h-full"
                   >
                     Edit
                   </button>
                   <button 
-                    onClick={() => onReset(u)} 
-                    className="px-2.5 py-1 text-xs border border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded font-medium transition-all"
+                    onClick={(e) => { e.stopPropagation(); onReset(u); }} 
+                    className="text-amber-700 hover:bg-amber-50 px-2 py-0.5 text-[10px] font-bold border-r border-[#E5E7EB] h-full"
                   >
-                    Reset Password
+                    PW Reset
                   </button>
                   <button 
-                    onClick={() => onDelete(u)} 
-                    className="px-2.5 py-1 text-xs border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 rounded font-medium transition-all"
+                    onClick={(e) => { e.stopPropagation(); onDelete(u); }} 
+                    className="text-red-600 hover:bg-red-50 px-2 py-0.5 text-[10px] font-bold h-full"
                   >
                     Delete
                   </button>
@@ -54,26 +68,27 @@ const UserManagementTable = ({ users, onEdit, onDelete, onReset }) => (
   </div>
 );
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStatus }) => {
   const [users, setUsers] = useState([]);
-  const [msg, setMsg] = useState('');
-  const [msgType, setMsgType] = useState('success');
+  const [selectedRowId, setSelectedRowId] = useState(null);
   const [form, setForm] = useState({ employeeName: '', username: '', password: '' });
   const [editTarget, setEditTarget] = useState(null);
   const [adminPwd, setAdminPwd] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      const u = await authStorage.getUsers();
-      setUsers(u);
-    };
     fetchUsers();
   }, []);
 
+  const fetchUsers = async () => {
+    const u = await authStorage.getUsers();
+    setUsers(u);
+    if (setStatus) setStatus({ text: `Retrieved ${u.length} active login profiles.`, type: 'S' });
+  };
+
   const showNotification = (text, type = 'success') => {
-    setMsg(text);
-    setMsgType(type);
-    setTimeout(() => setMsg(''), 3000);
+    if (setStatus) {
+      setStatus({ text, type: type === 'error' ? 'E' : 'S' });
+    }
   };
 
   const addUser = async (e) => {
@@ -124,54 +139,87 @@ const AdminDashboard = () => {
     showNotification('Administrative password changed successfully.');
   };
 
-  const handleBack = () => {
-    window.history.pushState({}, '', '/');
-    window.location.reload();
-  };
-
   const userCount = useMemo(() => users.length, [users]);
 
   return (
-    <div className="min-h-screen p-6 text-slate-800 relative">
-      <div className="max-w-6xl mx-auto space-y-6">
-        
-        {/* Top bar with back button */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">ERP Administrative Core</h1>
-            <p className="text-xs text-slate-500 font-semibold mt-1 uppercase tracking-wider">Total Registered Accounts: {userCount}</p>
-          </div>
+    <PageLayout 
+      currentPage={currentPage} 
+      onNavigate={onNavigate} 
+      onAdminClick={onAdminClick}
+      status={status}
+      setStatus={setStatus}
+    >
+      {/* Transaction Action Toolbar */}
+      <div className="bg-[#E8EDF5] border-b border-[#B8C2CC] px-2 py-1 flex items-center justify-between select-none">
+        <div className="flex gap-1">
           <button 
-            onClick={handleBack}
-            className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded shadow transition-all flex items-center gap-1.5"
+            onClick={() => {
+              const target = users.find(u => u.username === selectedRowId);
+              if (target) setEditTarget({ ...target, originalUsername: target.username });
+              else alert('Please select a user in the ALV Grid first.');
+            }}
+            className="sap-btn"
+            disabled={!selectedRowId}
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            BACK TO SYSTEM CORE
+            ✏ Edit Details
           </button>
+          <button 
+            onClick={() => {
+              const target = users.find(u => u.username === selectedRowId);
+              if (target) handleReset(target);
+              else alert('Please select a user in the ALV Grid first.');
+            }}
+            className="sap-btn"
+            disabled={!selectedRowId}
+          >
+            🔑 Reset Password
+          </button>
+          <button 
+            onClick={() => {
+              const target = users.find(u => u.username === selectedRowId);
+              if (target) handleDelete(target);
+              else alert('Please select a user in the ALV Grid first.');
+            }}
+            className="sap-btn"
+            disabled={!selectedRowId}
+          >
+            ❌ Delete Account
+          </button>
+          <button onClick={fetchUsers} className="sap-btn">↻ Refresh</button>
         </div>
+        <div className="text-[10px] font-mono font-bold text-slate-500 uppercase">
+          SU01 - User Maintenance
+        </div>
+      </div>
 
-        {/* System Messages */}
-        {msg && (
-          <div className={`p-3 rounded border text-xs font-semibold transition-all ${
-            msgType === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700'
-          }`}>
-            {msg}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Header stats block */}
+        <section className="border border-[#B8C2CC] bg-white p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">System Security Parameters</h2>
+              <span className="text-[10px] text-slate-400 font-mono">Active login records: {userCount}</span>
+            </div>
+            <button 
+              onClick={() => onNavigate('sap_easy_access')}
+              className="sap-btn bg-[#D9E2F3] hover:bg-[#C6D9F1] font-bold text-xs"
+            >
+              ⬅ Exit to Easy Access
+            </button>
           </div>
-        )}
+        </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 space-y-4">
             {/* Manage Users section */}
-            <section className="sap-panel p-5">
-              <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
-                <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Registered Accounts Directory</h2>
+            <section className="border border-[#B8C2CC] bg-white p-4">
+              <div className="border-b border-[#B8C2CC] pb-1.5 mb-3 font-bold text-xs uppercase text-slate-700">
+                Registered Logins ALV Matrix
               </div>
               <UserManagementTable
                 users={users}
+                selectedRowId={selectedRowId}
+                setSelectedRowId={setSelectedRowId}
                 onDelete={handleDelete}
                 onReset={handleReset}
                 onEdit={(u) => setEditTarget({ ...u, originalUsername: u.username })}
@@ -180,87 +228,73 @@ const AdminDashboard = () => {
             
             {/* Edit User target panel */}
             {editTarget && (
-              <section className="sap-panel p-5 animate-in slide-in-from-top-4 duration-300">
-                <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
-                  <div className="w-1 h-5 bg-amber-500 rounded-full"></div>
-                  <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Modify Account Settings</h2>
+              <section className="border border-[#B8C2CC] bg-white p-4 animate-in slide-in-from-top-4 duration-200">
+                <div className="border-b border-[#B8C2CC] pb-1.5 mb-3 font-bold text-xs uppercase text-slate-700">
+                  Edit User Details
                 </div>
-                <form onSubmit={saveEdit} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Employee Name</label>
-                    <input className="border border-slate-300 rounded px-3 py-1.5 text-xs bg-white" value={editTarget.employeeName} onChange={(e)=>setEditTarget({...editTarget, employeeName:e.target.value})}/>
+                <form onSubmit={saveEdit} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                  <div className="flex items-center">
+                    <label className="w-24 sap-label">Emp Name</label>
+                    <input className="flex-1 sap-required" value={editTarget.employeeName} onChange={(e)=>setEditTarget({...editTarget, employeeName:e.target.value})}/>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Username</label>
-                    <input className="border border-slate-300 rounded px-3 py-1.5 text-xs bg-white" value={editTarget.username} onChange={(e)=>setEditTarget({...editTarget, username:e.target.value})}/>
+                  <div className="flex items-center">
+                    <label className="w-24 sap-label">Username</label>
+                    <input className="flex-1 sap-required font-mono" value={editTarget.username} onChange={(e)=>setEditTarget({...editTarget, username:e.target.value})}/>
                   </div>
-                  <div className="flex items-end">
-                    <button className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs rounded shadow-sm transition-all">
-                      Save Changes
-                    </button>
-                  </div>
+                  <button className="sap-btn w-full">Confirm Modify</button>
                 </form>
               </section>
             )}
-
           </div>
 
-          <div className="space-y-6">
-            
+          <div className="space-y-4">
             {/* Create User Section */}
-            <section className="sap-panel p-5">
-              <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
-                <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Register New Account</h2>
+            <section className="border border-[#B8C2CC] bg-white p-4">
+              <div className="border-b border-[#B8C2CC] pb-1.5 mb-3 font-bold text-xs uppercase text-slate-700">
+                New User Registration
               </div>
-              <form onSubmit={addUser} className="flex flex-col gap-3.5">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Employee Name</label>
-                  <input className="border border-slate-300 rounded px-3 py-1.5 text-xs bg-white" placeholder="e.g. John Doe" value={form.employeeName} onChange={(e)=>setForm({...form, employeeName:e.target.value})}/>
+              <form onSubmit={addUser} className="space-y-3">
+                <div className="flex items-center">
+                  <label className="w-28 sap-label">Employee Name</label>
+                  <input className="flex-1 sap-required" placeholder="e.g. John Doe" value={form.employeeName} onChange={(e)=>setForm({...form, employeeName:e.target.value})}/>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Username</label>
-                  <input className="border border-slate-300 rounded px-3 py-1.5 text-xs bg-white" placeholder="e.g. johndoe" value={form.username} onChange={(e)=>setForm({...form, username:e.target.value})}/>
+                <div className="flex items-center">
+                  <label className="w-28 sap-label">Username</label>
+                  <input className="flex-1 sap-required font-mono" placeholder="e.g. johndoe" value={form.username} onChange={(e)=>setForm({...form, username:e.target.value})}/>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Initial Password</label>
-                  <input type="password" className="border border-slate-300 rounded px-3 py-1.5 text-xs bg-white" placeholder="••••••••" value={form.password} onChange={(e)=>setForm({...form, password:e.target.value})}/>
+                <div className="flex items-center">
+                  <label className="w-28 sap-label">Initial Password</label>
+                  <input type="password" className="flex-1 sap-required" placeholder="••••••••" value={form.password} onChange={(e)=>setForm({...form, password:e.target.value})}/>
                 </div>
-                <button className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded shadow-sm transition-all mt-1">
-                  Create Account
-                </button>
+                <button className="sap-btn w-full mt-2">Create Profile</button>
               </form>
             </section>
 
             {/* Change Admin Password */}
-            <section className="sap-panel p-5">
-              <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
-                <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Change Admin Password</h2>
+            <section className="border border-[#B8C2CC] bg-white p-4">
+              <div className="border-b border-[#B8C2CC] pb-1.5 mb-3 font-bold text-xs uppercase text-slate-700">
+                Change Admin Bypass
               </div>
-              <form onSubmit={changeAdminPassword} className="flex flex-col gap-3.5">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Current Password</label>
-                  <input type="password" className="border border-slate-300 rounded px-3 py-1.5 text-xs bg-white" placeholder="••••••••" value={adminPwd.oldPassword} onChange={(e)=>setAdminPwd({...adminPwd, oldPassword:e.target.value})}/>
+              <form onSubmit={changeAdminPassword} className="space-y-3">
+                <div className="flex items-center">
+                  <label className="w-28 sap-label">Old Password</label>
+                  <input type="password" className="flex-1 sap-required" placeholder="••••••••" value={adminPwd.oldPassword} onChange={(e)=>setAdminPwd({...adminPwd, oldPassword:e.target.value})}/>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">New Password</label>
-                  <input type="password" className="border border-slate-300 rounded px-3 py-1.5 text-xs bg-white" placeholder="••••••••" value={adminPwd.newPassword} onChange={(e)=>setAdminPwd({...adminPwd, newPassword:e.target.value})}/>
+                <div className="flex items-center">
+                  <label className="w-28 sap-label">New Password</label>
+                  <input type="password" className="flex-1 sap-required" placeholder="••••••••" value={adminPwd.newPassword} onChange={(e)=>setAdminPwd({...adminPwd, newPassword:e.target.value})}/>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase">Confirm New Password</label>
-                  <input type="password" className="border border-slate-300 rounded px-3 py-1.5 text-xs bg-white" placeholder="••••••••" value={adminPwd.confirmPassword} onChange={(e)=>setAdminPwd({...adminPwd, confirmPassword:e.target.value})}/>
+                <div className="flex items-center">
+                  <label className="w-28 sap-label">Confirm Pass</label>
+                  <input type="password" className="flex-1 sap-required" placeholder="••••••••" value={adminPwd.confirmPassword} onChange={(e)=>setAdminPwd({...adminPwd, confirmPassword:e.target.value})}/>
                 </div>
-                <button className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded shadow-sm transition-all mt-1">
-                  Update Password
-                </button>
+                <button className="sap-btn w-full mt-2">Update Bypass</button>
               </form>
             </section>
-
           </div>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 };
 

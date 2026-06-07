@@ -13,8 +13,8 @@ export const PlanningSheetPreview = ({ data }) => {
 
       <div className="grid grid-cols-4 gap-y-2 gap-x-4 text-xs border border-black p-4 mb-6">
         <div className="font-bold">Set No: <span className="font-normal">{data.setNo}</span></div>
-        <div className="font-bold text-right">Date: <span className="font-normal">{data.date}</span></div>
-        <div className="col-span-2"></div>
+        <div className="font-bold">User: <span className="font-normal">{data.sizing?.createdBy || 'ASIF'}</span></div>
+        <div className="font-bold text-right col-span-2">Date: <span className="font-normal">{data.date}{data.sizing?.createdAtTime ? ` @ ${data.sizing.createdAtTime}` : ''}</span></div>
         
         <div className="font-bold">Buyer: <span className="font-normal">{data.buyer}</span></div>
         <div className="font-bold">Style/Code: <span className="font-normal">{data.styleCode}</span></div>
@@ -42,12 +42,10 @@ export const PlanningSheetPreview = ({ data }) => {
         <table className="w-full text-[10px] border-collapse border border-black">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border border-black p-1">Set Length</th>
-              <th className="border border-black p-1">Per Set</th>
-              <th className="border border-black p-1">Ratio</th>
               <th className="border border-black p-1">Yarn Name</th>
               <th className="border border-black p-1">Supp.</th>
               <th className="border border-black p-1">Yarn Lot</th>
+              <th className="border border-black p-1">Ratio</th>
               <th className="border border-black p-1">Beam</th>
               <th className="border border-black p-1">Ends/Beam</th>
               <th className="border border-black p-1">Total Ends</th>
@@ -57,12 +55,10 @@ export const PlanningSheetPreview = ({ data }) => {
           <tbody>
             {data.warpingRows.map((row, i) => (
               <tr key={i}>
-                <td className="border border-black p-1 text-center">{row.setLength}</td>
-                <td className="border border-black p-1 text-center">{row.perSet}</td>
-                <td className="border border-black p-1 text-center">{row.ratio}</td>
                 <td className="border border-black p-1 text-center">{row.yarnName}</td>
                 <td className="border border-black p-1 text-center">{row.supp}</td>
                 <td className="border border-black p-1 text-center">{row.yarnLot}</td>
+                <td className="border border-black p-1 text-center">{row.ratio}</td>
                 <td className="border border-black p-1 text-center">{row.beam}</td>
                 <td className="border border-black p-1 text-center">{row.endsBeam}</td>
                 <td className="border border-black p-1 text-center">{row.totalEnds}</td>

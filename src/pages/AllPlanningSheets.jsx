@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { PlanningSheetPreview } from '../components/planning/PlanningSheetPreview';
-import { planningStorage, PLANNING_STORAGE_KEY } from '../services/planningStorage';
+import { planningStorage } from '../services/planningStorage';
+import { yarnStockStorage } from '../services/yarnStockStorage';
 import { SearchBar } from '../components/ui/FormInputs';
+import { PasswordPromptModal } from '../components/ui/PasswordPromptModal';
 
-const AllPlanningSheets = ({ currentPage, onNavigate, onAdminClick }) => {
+const AllPlanningSheets = ({ currentPage, onNavigate, onAdminClick, onEditPlan, status, setStatus }) => {
   const [sheets, setSheets] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredSheets, setFilteredSheets] = useState([]);
   const [selectedSheet, setSelectedSheet] = useState(null);
+  const [selectedRowId, setSelectedRowId] = useState(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [sortAscending, setSortAscending] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
     loadSheets();
@@ -19,162 +24,328 @@ const AllPlanningSheets = ({ currentPage, onNavigate, onAdminClick }) => {
     const data = await planningStorage.getAllSheets();
     setSheets(data);
     setFilteredSheets(data);
+    if (setStatus) setStatus({ text: `Retrieved ${data.length} planning records from DB.`, type: 'S' });
   };
 
   const handleSearch = () => {
+    if (!searchQuery.trim()) {
+      setFilteredSheets(sheets);
+      return;
+    }
     const filtered = sheets.filter(s => s.setNo?.toString().includes(searchQuery));
     setFilteredSheets(filtered);
+    if (setStatus) setStatus({ text: `Filter applied: ${filtered.length} plans found matching Set No: ${searchQuery}`, type: 'S' });
   };
 
   const handleClear = () => {
     setSearchQuery('');
     setFilteredSheets(sheets);
+    if (setStatus) setStatus({ text: 'Filters cleared.', type: 'W' });
   };
 
-  const handleDelete = async (id) => {
-    const password = window.prompt('Please enter the delete confirmation password:');
-    if (password === null) return; // cancelled
-    if (password !== '0707') {
-      alert('Invalid password! Deletion cancelled.');
-      return;
-    }
-    if (window.confirm('Are you sure you want to delete this planning sheet? This action cannot be undone.')) {
-      try {
-        await planningStorage.deletePlanningSheet(id);
-        await loadSheets();
-        if (selectedSheet?.id === id) {
-          setSelectedSheet(null);
-          setIsPreviewMode(false);
-        }
-      } catch (e) {
-        alert('Failed to delete planning sheet.');
-      }
-    }
+  const handleDelete = (id, setNo) => {
+    setDeleteTarget({ id, setNo });
   };
 
   const handleView = (sheet) => {
     setSelectedSheet(sheet);
     setIsPreviewMode(true);
+    if (setStatus) setStatus({ text: `Displaying Planning Sheet Set ${sheet.setNo}`, type: 'S' });
   };
 
   const handlePrint = (sheet) => {
     setSelectedSheet(sheet);
     setIsPreviewMode(true);
+    if (setStatus) setStatus({ text: `Printing Planning Sheet Set ${sheet.setNo}...`, type: 'S' });
     setTimeout(() => {
       window.print();
     }, 100);
   };
 
-  return (
-    <PageLayout currentPage={currentPage} onNavigate={onNavigate} onAdminClick={onAdminClick}>
-      <header className="sap-header border-b border-slate-200 p-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-lg font-bold text-slate-900">Planning <span className="text-blue-600">Archive</span></h1>
-          <p className="text-[11px] font-semibold text-slate-500 mt-0.5 uppercase tracking-wider">All Generated Planning Sheets</p>
-        </div>
-        {isPreviewMode && (
-          <button 
-            onClick={() => setIsPreviewMode(false)}
-            className="px-4 py-2 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 text-slate-700 bg-white shadow-xs transition-all"
-          >
-            BACK TO LIST
-          </button>
-        )}
-      </header>
+  const handleSort = () => {
+    const sorted = [...filteredSheets].sort((a, b) => {
+      const aVal = parseInt(a.setNo) || 0;
+      const bVal = parseInt(b.setNo) || 0;
+      return sortAscending ? aVal - bVal : bVal - aVal;
+    });
+    setFilteredSheets(sorted);
+    setSortAscending(!sortAscending);
+    if (setStatus) setStatus({ text: `ALV grid sorted by Set No ${sortAscending ? 'Ascending' : 'Descending'}.`, type: 'S' });
+  };
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+  const handleExportExcel = async () => {
+    try {
+      if (!window.ExcelJS) {
+        alert("ExcelJS library is still loading. Please try again in a moment.");
+        return;
+      }
+
+      const workbook = new window.ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Production Plans');
+
+      // Title Block
+      worksheet.getCell('A1').value = 'Ha-meem Ching Tai Pocketing & Accessories Ltd.';
+      worksheet.getCell('A1').font = { name: 'Segoe UI', size: 16, bold: true, color: { argb: 'FF1E3A8A' } };
+      worksheet.mergeCells('A1:G1');
+
+      worksheet.getCell('A2').value = 'ERP Solution - Production Planning Archive';
+      worksheet.getCell('A2').font = { name: 'Segoe UI', size: 11, italic: true, color: { argb: 'FF475569' } };
+      worksheet.mergeCells('A2:G2');
+
+      worksheet.getCell('A3').value = `Generated: ${new Date().toLocaleString()}`;
+      worksheet.getCell('A3').font = { name: 'Segoe UI', size: 9, color: { argb: 'FF64748B' } };
+      worksheet.mergeCells('A3:G3');
+
+      worksheet.addRow([]); // Blank row 4
+
+      // Header Row
+      const headerRow = worksheet.getRow(5);
+      headerRow.values = [
+        'Set No',
+        'Buyer',
+        'Style/Code',
+        'Date',
+        'Order Ref',
+        'Weave',
+        'Colour'
+      ];
+      headerRow.height = 26;
+
+      headerRow.eachCell((cell) => {
+        cell.font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF2563EB' } // Cobalt Blue
+        };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          bottom: { style: 'medium', color: { argb: 'FF1E3A8A' } },
+          right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+        };
+      });
+
+      // Data Rows
+      filteredSheets.forEach((sheet, idx) => {
+        const row = worksheet.addRow([
+          sheet.setNo || '',
+          sheet.buyer || '',
+          sheet.styleCode || '',
+          sheet.date || '',
+          sheet.orderRef || '',
+          sheet.weave || '',
+          sheet.colour || ''
+        ]);
+        row.height = 20;
+
+        const bgColor = idx % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC'; // zebra striping
+
+        row.eachCell((cell, colNumber) => {
+          cell.font = { name: 'Segoe UI', size: 10, color: { argb: 'FF1E293B' } };
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: bgColor }
+          };
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+          };
+
+          // Alignment
+          if (colNumber === 1 || colNumber === 4 || colNumber === 5) {
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          } else {
+            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+          }
+        });
+      });
+
+      // Column widths
+      worksheet.columns = [
+        { width: 12 }, // Set No
+        { width: 18 }, // Buyer
+        { width: 20 }, // Style/Code
+        { width: 15 }, // Date
+        { width: 18 }, // Order Ref
+        { width: 15 }, // Weave
+        { width: 15 }  // Colour
+      ];
+
+      // Write to buffer and trigger download
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `PLAN_ARCHIVE_${Date.now()}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      if (setStatus) setStatus({ text: 'ALV Grid data exported to Excel (.xlsx) successfully.', type: 'S' });
+    } catch (error) {
+      console.error("Failed to export Excel file:", error);
+      if (setStatus) setStatus({ text: 'Failed to export Excel file.', type: 'E' });
+    }
+  };
+
+  return (
+    <PageLayout 
+      currentPage={currentPage} 
+      onNavigate={onNavigate} 
+      onAdminClick={onAdminClick}
+      status={status}
+      setStatus={setStatus}
+    >
+      {/* Transaction Action Toolbar */}
+      <div className="bg-slate-100 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 select-none transition-colors">
+        <div className="flex flex-wrap gap-2">
+          {isPreviewMode ? (
+            <button onClick={() => setIsPreviewMode(false)} className="sap-btn sap-btn-secondary">⬅ Back to ALV Grid</button>
+          ) : (
+            <>
+              <button 
+                onClick={() => {
+                  const target = filteredSheets.find(s => s.id === selectedRowId);
+                  if (target) handleView(target);
+                  else alert('Please select a row in the ALV Grid first.');
+                }} 
+                className="sap-btn"
+                disabled={!selectedRowId}
+              >
+                👓 Display Plan
+              </button>
+              <button 
+                onClick={() => {
+                  const target = filteredSheets.find(s => s.id === selectedRowId);
+                  if (target) onEditPlan(target);
+                  else alert('Please select a row in the ALV Grid first.');
+                }} 
+                className="sap-btn sap-btn-secondary"
+                disabled={!selectedRowId}
+              >
+                ✏ Edit Plan
+              </button>
+              <button 
+                onClick={() => {
+                  const target = filteredSheets.find(s => s.id === selectedRowId);
+                  if (target) handlePrint(target);
+                  else alert('Please select a row in the ALV Grid first.');
+                }} 
+                className="sap-btn sap-btn-secondary"
+                disabled={!selectedRowId}
+              >
+                🖨 Print / PDF
+              </button>
+              <button onClick={handleSort} className="sap-btn sap-btn-secondary">↕ Sort Set No</button>
+              <button onClick={handleExportExcel} className="sap-btn sap-btn-secondary">📥 Export Excel</button>
+              <button onClick={loadSheets} className="sap-btn sap-btn-secondary">↻ Refresh</button>
+            </>
+          )}
+        </div>
+        <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+          Information System
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50 dark:bg-[#0B0F19] transition-colors">
         {!isPreviewMode ? (
-          <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Search Section */}
-            <section className="sap-panel p-5">
-              <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
-                <div className="w-1 h-5 bg-blue-600 rounded-full"></div>
-                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Search Planning Sheet</h2>
+          <>
+            {/* 1. Selection Criteria Screen */}
+            <section className="office-card">
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-2.5 mb-4 font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Selection Criteria
               </div>
-              <div className="flex flex-wrap items-end gap-3">
-                <div className="flex-1 max-w-xs">
-                  <label className="text-[11px] font-semibold text-slate-600 uppercase mb-1.5 block">Set No</label>
-                  <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Enter Set No (e.g. 10001)..." />
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center">
+                  <label className="w-24 sap-label">Set Number</label>
+                  <input 
+                    type="text" 
+                    value={searchQuery} 
+                    onChange={e => setSearchQuery(e.target.value)} 
+                    placeholder="Enter Set No..."
+                    className="w-40 font-mono"
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+                  />
                 </div>
-                <button 
-                  onClick={handleSearch}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm transition-all"
-                >
-                  SEARCH
-                </button>
-                <button 
-                  onClick={handleClear}
-                  className="px-5 py-2 border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold rounded shadow-xs transition-all"
-                >
-                  CLEAR
-                </button>
+                <button onClick={handleSearch} className="sap-btn">Execute (F8)</button>
+                <button onClick={handleClear} className="sap-btn sap-btn-secondary">Clear Filter</button>
               </div>
             </section>
 
-            {/* Results Section */}
-            <section className="sap-panel overflow-hidden p-5 animate-in slide-in-from-bottom-4 duration-700">
-              <div className="overflow-x-auto border border-slate-200 rounded-md">
-                <table className="w-full text-left border-collapse">
-                  <thead className="bg-slate-50 text-slate-500 text-[10px] font-bold uppercase tracking-wider border-b border-slate-200">
+            {/* 2. ALV Grid Table */}
+            <section className="office-card flex flex-col flex-1">
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-2.5 mb-4 flex items-center justify-between">
+                <span className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">Production Plan ALV List</span>
+                <span className="text-xs font-mono text-slate-400">Records found: {filteredSheets.length}</span>
+              </div>
+
+              <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
+                <table className="sap-alv-table">
+                  <thead>
                     <tr>
-                      <th className="p-3 border-r border-slate-200">Set No</th>
-                      <th className="p-3 border-r border-slate-200">Buyer</th>
-                      <th className="p-3 border-r border-slate-200">Style/Code</th>
-                      <th className="p-3 border-r border-slate-200">Date</th>
-                      <th className="p-3 border-r border-slate-200">Order Ref</th>
-                      <th className="p-3 border-r border-slate-200">Weave</th>
-                      <th className="p-3 border-r border-slate-200">Colour</th>
-                      <th className="p-3 text-center">Actions</th>
+                      <th className="w-12 text-center">Sel</th>
+                      <th>Set No</th>
+                      <th>Buyer</th>
+                      <th>Style/Code</th>
+                      <th>Date</th>
+                      <th>Order Ref</th>
+                      <th>Weave</th>
+                      <th>Colour</th>
+                      <th className="text-center w-36">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="text-xs text-slate-700">
+                  <tbody>
                     {filteredSheets.length === 0 ? (
                       <tr>
-                        <td colSpan="8" className="p-8 text-center text-slate-400 italic">
-                          No Planning Sheets found matching your search.
-                        </td>
+                        <td colSpan="9" className="p-8 text-center text-slate-400 dark:text-slate-500 italic">No plans match the search criteria.</td>
                       </tr>
                     ) : (
                       filteredSheets.map(sheet => (
-                        <tr key={sheet.id} className="hover:bg-slate-50/70 border-b border-slate-200 last:border-b-0 transition-colors">
-                          <td className="p-3 border-r border-slate-200 font-bold text-blue-600">{sheet.setNo}</td>
-                          <td className="p-3 border-r border-slate-200 font-medium text-slate-900">{sheet.buyer}</td>
-                          <td className="p-3 border-r border-slate-200">{sheet.styleCode}</td>
-                          <td className="p-3 border-r border-slate-200">{sheet.date}</td>
-                          <td className="p-3 border-r border-slate-200">{sheet.orderRef}</td>
-                          <td className="p-3 border-r border-slate-200">{sheet.weave}</td>
-                          <td className="p-3 border-r border-slate-200">{sheet.colour}</td>
-                          <td className="p-3">
-                            <div className="flex justify-center gap-1.5">
-                              <button
+                        <tr 
+                          key={sheet.id}
+                          onClick={() => setSelectedRowId(sheet.id)}
+                          className={`cursor-pointer ${selectedRowId === sheet.id ? 'sap-selected' : ''}`}
+                        >
+                          <td className="text-center" onClick={(e) => e.stopPropagation()}>
+                            <input 
+                              type="radio" 
+                              name="row_select"
+                              checked={selectedRowId === sheet.id}
+                              onChange={() => setSelectedRowId(sheet.id)}
+                              className="w-4 h-4 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-750 dark:border-gray-600"
+                            />
+                          </td>
+                          <td className="font-bold text-blue-600 dark:text-blue-400 font-mono">{sheet.setNo}</td>
+                          <td className="font-semibold text-slate-900 dark:text-slate-100">{sheet.buyer}</td>
+                          <td className="text-slate-700 dark:text-slate-300">{sheet.styleCode}</td>
+                          <td className="font-mono text-slate-700 dark:text-slate-300">{sheet.date}</td>
+                          <td className="text-slate-700 dark:text-slate-300">{sheet.orderRef}</td>
+                          <td className="text-slate-700 dark:text-slate-300">{sheet.weave}</td>
+                          <td className="text-slate-700 dark:text-slate-300">{sheet.colour}</td>
+                          <td className="p-1 text-center" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-center gap-1">
+                              <button 
                                 onClick={() => handleView(sheet)}
-                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all"
-                                title="View"
+                                className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 px-2 py-1 text-xs font-semibold rounded"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
+                                View
                               </button>
-
-                              <button
-                                onClick={() => handlePrint(sheet)}
-                                className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-all"
-                                title="Print/PDF"
+                              <button 
+                                onClick={() => onEditPlan(sheet)}
+                                className="text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-955/20 px-2 py-1 text-xs font-semibold rounded"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                </svg>
+                                Edit
                               </button>
-
-                              <button
-                                onClick={() => handleDelete(sheet.id)}
-                                className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-all"
-                                title="Delete"
+                              <button 
+                                onClick={() => handleDelete(sheet.id, sheet.setNo)}
+                                className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 px-2 py-1 text-xs font-semibold rounded"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
+                                Delete
                               </button>
                             </div>
                           </td>
@@ -185,21 +356,91 @@ const AllPlanningSheets = ({ currentPage, onNavigate, onAdminClick }) => {
                 </table>
               </div>
             </section>
-          </div>
+          </>
         ) : (
-          <div className="flex flex-col items-center gap-6 animate-in zoom-in-95 duration-300">
-            <div className="flex gap-4">
+          <div className="flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200">
+            <div className="flex gap-2">
               <button 
                 onClick={() => window.print()} 
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded shadow-md flex items-center gap-1.5 transition-all"
+                className="sap-btn bg-blue-100 hover:bg-blue-200 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-200 font-bold text-xs"
               >
-                <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                PRINT / SAVE AS PDF
+                🖨 Print Planning Sheet
+              </button>
+              <button 
+                onClick={() => setIsPreviewMode(false)} 
+                className="sap-btn sap-btn-secondary"
+              >
+                ⬅ Back to ALV Grid
               </button>
             </div>
             <PlanningSheetPreview data={selectedSheet} />
           </div>
         )}
+        <PasswordPromptModal
+          isOpen={deleteTarget !== null}
+          title={deleteTarget ? `Delete Plan Set: ${deleteTarget.setNo}` : ''}
+          onClose={() => setDeleteTarget(null)}
+          onSubmit={async () => {
+            const { id, setNo } = deleteTarget;
+            setDeleteTarget(null);
+            if (window.confirm(`Are you sure you want to delete Planning Sheet Set: ${setNo}?`)) {
+              try {
+                // Fetch sheet details first to re-add used quantity to stock
+                const allSheets = await planningStorage.getAllSheets();
+                const targetSheet = allSheets.find(s => s.id === id);
+                
+                if (targetSheet) {
+                  const warping = targetSheet.warpingRows || [];
+                  const weaving = targetSheet.weavingRows || [];
+                  const returns = {};
+                  
+                  for (const row of warping) {
+                    if (row.yarnStockId && row.qtyKg) {
+                      const qty = parseFloat(row.qtyKg) || 0;
+                      if (qty > 0) {
+                        returns[row.yarnStockId] = (returns[row.yarnStockId] || 0) + qty;
+                      }
+                    }
+                  }
+                  
+                  for (const row of weaving) {
+                    if (row.yarnStockId && row.qtyKg) {
+                      const qty = parseFloat(row.qtyKg) || 0;
+                      if (qty > 0) {
+                        returns[row.yarnStockId] = (returns[row.yarnStockId] || 0) + qty;
+                      }
+                    }
+                  }
+                  
+                  const allStocks = await yarnStockStorage.getAllYarnStocks();
+                  for (const [stockId, totalReturnQty] of Object.entries(returns)) {
+                    const currentItem = allStocks.find(s => s.id === stockId);
+                    if (currentItem) {
+                      const newQty = (parseFloat(currentItem.unrestrictedStock) || 0) + totalReturnQty;
+                      await yarnStockStorage.saveYarnStock({
+                        ...currentItem,
+                        unrestrictedStock: newQty,
+                        lastGoodsReceiptDate: new Date().toISOString()
+                      });
+                    }
+                  }
+                }
+
+                await planningStorage.deletePlanningSheet(id);
+                if (setStatus) setStatus({ text: `Planning Sheet Set ${setNo} deleted successfully. Yarn stock restored.`, type: 'S' });
+                await loadSheets();
+                if (selectedSheet?.id === id) {
+                  setSelectedSheet(null);
+                  setIsPreviewMode(false);
+                }
+              } catch (e) {
+                console.error(e);
+                if (setStatus) setStatus({ text: 'Delete failed.', type: 'E' });
+                alert('Failed to delete planning sheet.');
+              }
+            }
+          }}
+        />
       </div>
     </PageLayout>
   );
