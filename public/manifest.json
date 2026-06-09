@@ -1,0 +1,24 @@
+{
+  "name": "Ha-meem Ching Tai ERP",
+  "short_name": "HMCT ERP",
+  "description": "Enterprise Resource Planning Portal for Ha-meem Ching Tai Pocketing & Accessories Ltd.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#2563EB",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
