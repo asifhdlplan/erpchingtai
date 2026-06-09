@@ -121,3 +121,21 @@ insert into erp_settings (key, value)
 values ('admin_password', '0707')
 on conflict (key) do nothing;
 
+
+-- 6. Create erp_yarn_demands table
+create table if not exists erp_yarn_demands (
+  id text primary key,
+  "prNo" bigint not null unique,
+  date text not null,
+  items jsonb default '[]'::jsonb,
+  "createdAt" timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS on erp_yarn_demands
+alter table erp_yarn_demands enable row level security;
+
+-- Create policy for erp_yarn_demands
+create policy "Allow all actions for anon on erp_yarn_demands" on erp_yarn_demands
+  for all to anon using (true) with check (true);
+
+

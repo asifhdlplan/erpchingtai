@@ -281,3 +281,61 @@ label, .sap-label {
   font-size: 13px !important;
   padding: 0 8px !important;
 }
+
+/* Mobile & Tablet Responsive Layout Improvements */
+@media (max-width: 768px) {
+  /* Reduce outer padding on main workspace scroll areas on mobile */
+  .p-6 {
+    padding: 12px !important;
+  }
+  .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 12px !important;
+  }
+  
+  /* Reduce card padding on mobile to save valuable space */
+  .office-card {
+    padding: 12px !important;
+  }
+
+  /* Make all horizontal form rows stack vertically on mobile */
+  div.flex:has(> label.sap-label),
+  div.flex:has(> .sap-label),
+  div.flex:has(> label.w-24),
+  div.flex:has(> label.w-28),
+  div.flex:has(> label.w-32),
+  div.flex.items-center:has(> label) {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+  }
+
+  /* Force label text width to fill and align left when stacked */
+  div.flex:has(> label.sap-label) > label.sap-label,
+  div.flex:has(> .sap-label) > .sap-label,
+  div.flex:has(> label.w-24) > label.w-24,
+  div.flex:has(> label.w-28) > label.w-28,
+  div.flex:has(> label.w-32) > label.w-32,
+  div.flex.items-center:has(> label) > label {
+    width: 100% !important;
+    max-width: 100% !important;
+    text-align: left !important;
+    margin-bottom: 2px !important;
+  }
+
+  /* Make input wrappers take full width under the label */
+  div.flex:has(> label.sap-label) > .flex-grow,
+  div.flex:has(> label.sap-label) > .flex-1,
+  div.flex:has(> .sap-label) > .flex-grow,
+  div.flex:has(> .sap-label) > .flex-1,
+  div.flex:has(> label.w-24) > .flex-grow,
+  div.flex:has(> label.w-24) > .flex-1,
+  div.flex:has(> label.w-28) > .flex-grow,
+  div.flex:has(> label.w-28) > .flex-1,
+  div.flex:has(> label.w-32) > .flex-grow,
+  div.flex:has(> label.w-32) > .flex-1,
+  div.flex.items-center:has(> label) > .flex-grow,
+  div.flex.items-center:has(> label) > .flex-1 {
+    width: 100% !important;
+  }
+}
+

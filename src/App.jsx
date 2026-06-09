@@ -15,6 +15,8 @@ import SAPEasyAccess from './pages/SAPEasyAccess';
 import ActivityOverview from './pages/ActivityOverview';
 import YarnStockOverview from './pages/YarnStockOverview';
 import YarnStockEntry from './pages/YarnStockEntry';
+import YarnDemandCreation from './pages/YarnDemandCreation';
+import AllYarnDemands from './pages/AllYarnDemands';
 
 const ERPApp = () => {
   const [currentPage, setCurrentPage] = useState('sap_easy_access');
@@ -22,6 +24,7 @@ const ERPApp = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [editingPlan, setEditingPlan] = useState(null);
+  const [editingDemand, setEditingDemand] = useState(null);
   const [status, setStatus] = useState({ text: '', type: '' });
   const [navTargetPage, setNavTargetPage] = useState(null);
   const { login, logout, session } = useAuth();
@@ -36,6 +39,9 @@ const ERPApp = () => {
     }
     if (page === 'planning_creation') {
       setEditingPlan(null);
+    }
+    if (page === 'yarn_demand_creation') {
+      setEditingDemand(null);
     }
     
     if (page === 'admin_dashboard') {
@@ -149,6 +155,32 @@ const ERPApp = () => {
             currentPage={currentPage} 
             onNavigate={handleNavigate} 
             onAdminClick={() => setShowAdminPanel(true)} 
+            status={status}
+            setStatus={setStatus}
+          />
+        );
+      case 'yarn_demand_creation':
+        return (
+          <YarnDemandCreation
+            currentPage={currentPage}
+            onNavigate={handleNavigate}
+            onAdminClick={() => setShowAdminPanel(true)}
+            editingDemand={editingDemand}
+            setEditingDemand={setEditingDemand}
+            status={status}
+            setStatus={setStatus}
+          />
+        );
+      case 'all_yarn_demands':
+        return (
+          <AllYarnDemands
+            currentPage={currentPage}
+            onNavigate={handleNavigate}
+            onAdminClick={() => setShowAdminPanel(true)}
+            onEditDemand={(demand) => {
+              setEditingDemand(demand);
+              setCurrentPage('yarn_demand_creation');
+            }}
             status={status}
             setStatus={setStatus}
           />

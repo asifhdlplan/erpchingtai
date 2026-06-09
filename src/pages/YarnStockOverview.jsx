@@ -10,6 +10,12 @@ const YarnStockOverview = ({ currentPage, onNavigate, onAdminClick, status, setS
   const [sortField, setSortField] = useState('createdAt');
   const [sortAsc, setSortAsc] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [cloudStatus, setCloudStatus] = useState({
+    checked: false,
+    exists: true,
+    error: null,
+    isPlaceholder: false
+  });
 
   useEffect(() => {
     loadStocks();
@@ -17,6 +23,39 @@ const YarnStockOverview = ({ currentPage, onNavigate, onAdminClick, status, setS
 
   const loadStocks = async () => {
     setLoading(true);
+
+    const isPlaceholder = !import.meta.env.VITE_SUPABASE_URL || 
+                          !import.meta.env.VITE_SUPABASE_ANON_KEY || 
+                          import.meta.env.VITE_SUPABASE_URL.includes('your-project-id') ||
+                          import.meta.env.VITE_SUPABASE_ANON_KEY.includes('your-anon-public-key');
+                          
+    if (isPlaceholder) {
+      setCloudStatus({
+        checked: true,
+        exists: false,
+        error: 'Supabase credentials are not configured.',
+        isPlaceholder: true
+      });
+    } else {
+      try {
+        const result = await yarnStockStorage.checkCloudTable();
+        setCloudStatus({
+          checked: true,
+          exists: result.exists,
+          error: result.error || null,
+          isPlaceholder: false
+        });
+      } catch (checkErr) {
+        console.error('Database connection check error:', checkErr);
+        setCloudStatus({
+          checked: true,
+          exists: false,
+          error: checkErr.message || String(checkErr),
+          isPlaceholder: false
+        });
+      }
+    }
+
     try {
       const data = await yarnStockStorage.getAllYarnStocks();
       setStocks(data);
@@ -27,6 +66,38 @@ const YarnStockOverview = ({ currentPage, onNavigate, onAdminClick, status, setS
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCopySQL = () => {
+    const sqlScript = `-- Create erp_yarn_stock table
+create table if not exists erp_yarn_stock (
+  id text primary key,
+  plant text,
+  "storageLocation" text,
+  "materialDescription" text,
+  unit text,
+  "supplierName" text,
+  "supplierLot" text,
+  "unrestrictedStock" numeric default 0,
+  "lastGoodsReceiptDate" text,
+  "createdAt" timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS on erp_yarn_stock
+alter table erp_yarn_stock enable row level security;
+
+-- Create policy for erp_yarn_stock
+create policy "Allow all actions for anon on erp_yarn_stock" on erp_yarn_stock
+  for all to anon using (true) with check (true);`;
+
+    navigator.clipboard.writeText(sqlScript)
+      .then(() => {
+        if (setStatus) setStatus({ text: 'SQL migration script copied to clipboard successfully!', type: 'S' });
+      })
+      .catch((err) => {
+        console.error('Failed to copy text: ', err);
+        if (setStatus) setStatus({ text: 'Failed to copy SQL script. Please copy it manually.', type: 'E' });
+      });
   };
 
   const handleSort = (field) => {
@@ -121,6 +192,33 @@ const YarnStockOverview = ({ currentPage, onNavigate, onAdminClick, status, setS
       </div>
 
       <div className="flex-1 overflow-hidden p-6 bg-slate-50 dark:bg-[#0B0F19] flex flex-col space-y-4 transition-colors">
+        {/* Cloud Warning Banner */}
+        {!cloudStatus.exists && cloudStatus.checked && (
+          <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-colors">
+            <div className="flex items-start gap-3">
+              <span className="text-xl shrink-0" role="img" aria-label="warning">⚠️</span>
+              <div>
+                <h4 className="font-bold text-amber-800 dark:text-amber-400 text-sm">
+                  Cloud Database Sync Warning - Running in Local Browser Mode
+                </h4>
+                <p className="text-xs text-amber-700 dark:text-amber-400/80 mt-1">
+                  {cloudStatus.isPlaceholder 
+                    ? "Supabase is not configured. Please define VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file to enable global cloud database syncing."
+                    : `The table "erp_yarn_stock" was not found in your Supabase database instance. To store yarn stock globally, you need to create the table.`}
+                </p>
+              </div>
+            </div>
+            {!cloudStatus.isPlaceholder && (
+              <button
+                onClick={handleCopySQL}
+                className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white font-bold text-xs rounded transition flex items-center gap-1.5 shrink-0 shadow-sm shadow-amber-600/10"
+              >
+                📋 Copy SQL Migration
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Search & Statistics Filter Bar */}
         <div className="office-card p-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">

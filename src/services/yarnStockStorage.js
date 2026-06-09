@@ -3,6 +3,54 @@ import { supabase } from './supabaseClient';
 const LOCAL_STORAGE_KEY = 'erp_yarn_stock_data';
 
 export const yarnStockStorage = {
+  checkCloudTable: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('erp_yarn_stock')
+        .select('id')
+        .limit(1);
+      
+      if (error) {
+        // Postgres code '42P01' is relation does not exist, status 404 is also typical of PostgREST
+        if (error.code === '42P01' || error.message?.includes('relation "erp_yarn_stock" does not exist') || error.status === 404) {
+          return { exists: false, error: 'Table erp_yarn_stock does not exist in the database.' };
+        }
+        return { exists: false, error: error.message };
+      }
+      return { exists: true };
+    } catch (e) {
+      return { exists: false, error: e.message || String(e) };
+    }
+  },
+
+  syncLocalToCloud: async () => {
+    const localItems = getFromLocalStorage();
+    if (localItems.length === 0) return { synced: 0, total: 0, errors: [] };
+    
+    let syncedCount = 0;
+    const errors = [];
+    
+    for (const item of localItems) {
+      try {
+        const { error } = await supabase
+          .from('erp_yarn_stock')
+          .upsert(item);
+          
+        if (!error) {
+          syncedCount++;
+          // Remove from local storage upon successful sync
+          deleteFromLocalStorage(item.id);
+        } else {
+          errors.push({ id: item.id, message: error.message });
+        }
+      } catch (e) {
+        errors.push({ id: item.id, message: e.message || String(e) });
+      }
+    }
+    
+    return { synced: syncedCount, total: localItems.length, errors };
+  },
+
   saveYarnStock: async (stockItem) => {
     try {
       const itemId = stockItem.id || Date.now().toString();
@@ -27,7 +75,8 @@ export const yarnStockStorage = {
         console.warn('Supabase save error, writing to localStorage fallback:', error.message);
         saveToLocalStorage(itemData);
       } else {
-        saveToLocalStorage(itemData);
+        // Clear from local storage on successful cloud write to keep local storage clean
+        deleteFromLocalStorage(itemId);
       }
       return itemData;
     } catch (e) {
@@ -52,16 +101,30 @@ export const yarnStockStorage = {
 
   getAllYarnStocks: async () => {
     try {
-      const { data, error } = await supabase
-        .from('erp_yarn_stock')
-        .select('*')
-        .order('createdAt', { ascending: false });
+      // Check if table is available and healthy
+      const tableCheck = await yarnStockStorage.checkCloudTable();
+      
+      if (tableCheck.exists) {
+        // Auto-sync local storage items to the cloud first
+        const localItems = getFromLocalStorage();
+        if (localItems.length > 0) {
+          console.log(`Auto-syncing ${localItems.length} local items to cloud...`);
+          await yarnStockStorage.syncLocalToCloud();
+        }
 
-      if (error) {
-        console.warn('Supabase read error, fetching from localStorage fallback:', error.message);
-        return getFromLocalStorage();
+        const { data, error } = await supabase
+          .from('erp_yarn_stock')
+          .select('*')
+          .order('createdAt', { ascending: false });
+
+        if (!error) {
+          return data || [];
+        }
+        console.warn('Supabase read error after table check passed:', error.message);
+      } else {
+        console.warn('Cloud table not available, using local storage fallback:', tableCheck.error);
       }
-      return data || [];
+      return getFromLocalStorage();
     } catch (e) {
       console.error('Failed to fetch yarn stocks from database, reading localStorage:', e);
       return getFromLocalStorage();

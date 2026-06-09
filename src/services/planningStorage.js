@@ -60,12 +60,12 @@ export const planningStorage = {
         .select('setNo');
 
       if (error) throw error;
-      if (!data || data.length === 0) return 10001;
+      if (!data || data.length === 0) return 100001;
       const maxSetNo = Math.max(...data.map(s => parseInt(s.setNo) || 0));
-      return maxSetNo >= 10001 ? maxSetNo + 1 : 10001;
+      return maxSetNo >= 100001 ? maxSetNo + 1 : 100001;
     } catch (e) {
       console.error('Failed to calculate next set number:', e);
-      return 10001;
+      return 100001;
     }
   }
 };

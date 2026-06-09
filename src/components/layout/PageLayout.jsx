@@ -61,6 +61,10 @@ export const PageLayout = ({
         return { code: 'MMBE', title: 'Yarn Warehouse Stock Status' };
       case 'yarn_stock_entry':
         return { code: 'MIGO', title: 'Yarn Stock Goods Receipt' };
+      case 'yarn_demand_creation':
+        return { code: 'ZDEM_NEW', title: 'Yarn Demand Creation' };
+      case 'all_yarn_demands':
+        return { code: 'ZDEM_LIST', title: 'All Yarn Demands Archive' };
       case 'sap_easy_access':
       default:
         return { code: 'Home', title: 'Main Menu Gateway' };
@@ -300,6 +304,18 @@ export const PageLayout = ({
                             className={`sap-tree-item ${currentPage === 'yarn_stock_overview' ? 'active' : ''}`}
                           >
                             Yarn Stock Status
+                          </div>
+                          <div 
+                            onClick={() => onNavigate('yarn_demand_creation')}
+                            className={`sap-tree-item ${currentPage === 'yarn_demand_creation' ? 'active' : ''}`}
+                          >
+                            Yarn Demand Creation
+                          </div>
+                          <div 
+                            onClick={() => onNavigate('all_yarn_demands')}
+                            className={`sap-tree-item ${currentPage === 'all_yarn_demands' ? 'active' : ''}`}
+                          >
+                            All Yarn Demands
                           </div>
                         </div>
                       )}
