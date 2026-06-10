@@ -1007,7 +1007,12 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
                 ⬅ Back to Edit
               </button>
             </div>
-            <PlanningSheetPreview data={{ ...formData, warpingRows, sizing: sizingData, weavingRows }} />
+            <PlanningSheetPreview data={{ 
+              ...formData, 
+              warpingRows, 
+              sizing: sizingData, 
+              weavingRows: weavingRows.map((row, i) => i === 0 ? { ...row, ...weavingFabric } : row) 
+            }} />
           </div>
         )}
       </div>
