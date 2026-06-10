@@ -902,15 +902,39 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
                               </thead>
                               <tbody>
                                 <tr>
-                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.greyConstruction || ''} onChange={e => handleFabricChange('greyConstruction', e.target.value)} /></td>
-                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.weave || ''} onChange={e => handleFabricChange('weave', e.target.value)} /></td>
-                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.weftRatio || ''} onChange={e => handleFabricChange('weftRatio', e.target.value)} /></td>
-                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.reedSpace || ''} onChange={e => handleFabricChange('reedSpace', e.target.value)} /></td>
-                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.reed || ''} onChange={e => handleFabricChange('reed', e.target.value)} /></td>
-                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.endsDent || ''} onChange={e => handleFabricChange('endsDent', e.target.value)} /></td>
-                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.gWidth || ''} onChange={e => handleFabricChange('gWidth', e.target.value)} /></td>
-                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.weight || ''} onChange={e => handleFabricChange('weight', e.target.value)} /></td>
-                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.selvedge || ''} onChange={e => handleFabricChange('selvedge', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1 bg-transparent text-xs text-slate-800 dark:text-slate-100" value={weavingFabric.greyConstruction || ''} onChange={e => handleFabricChange('greyConstruction', e.target.value)} /></td>
+                                  <td className="p-0">
+                                    <select 
+                                      className="w-full h-[22px] border-0 outline-none px-1 bg-transparent text-xs text-slate-800 dark:text-slate-100" 
+                                      value={weavingFabric.weave || ''} 
+                                      onChange={e => handleFabricChange('weave', e.target.value)}
+                                    >
+                                      <option value="" className="text-slate-400 bg-white dark:bg-slate-900">Select...</option>
+                                      <option value="1/1 PLAIN" className="bg-white dark:bg-slate-900">1/1 PLAIN</option>
+                                      <option value="2/1 RHT" className="bg-white dark:bg-slate-900">2/1 RHT</option>
+                                      <option value="3/1 RHT" className="bg-white dark:bg-slate-900">3/1 RHT</option>
+                                      <option value="2/1 LHT" className="bg-white dark:bg-slate-900">2/1 LHT</option>
+                                      <option value="3/1 LHT" className="bg-white dark:bg-slate-900">3/1 LHT</option>
+                                      <option value="Dobby" className="bg-white dark:bg-slate-900">Dobby</option>
+                                    </select>
+                                  </td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1 bg-transparent text-xs text-slate-800 dark:text-slate-100" value={weavingFabric.weftRatio || ''} onChange={e => handleFabricChange('weftRatio', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1 bg-transparent text-xs text-slate-800 dark:text-slate-100" value={weavingFabric.reedSpace || ''} onChange={e => handleFabricChange('reedSpace', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1 bg-transparent text-xs text-slate-800 dark:text-slate-100" value={weavingFabric.reed || ''} onChange={e => handleFabricChange('reed', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1 bg-transparent text-xs text-slate-800 dark:text-slate-100" value={weavingFabric.endsDent || ''} onChange={e => handleFabricChange('endsDent', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1 bg-transparent text-xs text-slate-800 dark:text-slate-100" value={weavingFabric.gWidth || ''} onChange={e => handleFabricChange('gWidth', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1 bg-transparent text-xs text-slate-800 dark:text-slate-100" value={weavingFabric.weight || ''} onChange={e => handleFabricChange('weight', e.target.value)} /></td>
+                                  <td className="p-0">
+                                    <select 
+                                      className="w-full h-[22px] border-0 outline-none px-1 bg-transparent text-xs text-slate-800 dark:text-slate-100" 
+                                      value={weavingFabric.selvedge || ''} 
+                                      onChange={e => handleFabricChange('selvedge', e.target.value)}
+                                    >
+                                      <option value="" className="text-slate-400 bg-white dark:bg-slate-900">Select...</option>
+                                      <option value="Yes" className="bg-white dark:bg-slate-900">Yes</option>
+                                      <option value="No" className="bg-white dark:bg-slate-900">No</option>
+                                    </select>
+                                  </td>
                                 </tr>
                               </tbody>
                             </table>

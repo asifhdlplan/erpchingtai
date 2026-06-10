@@ -34,7 +34,10 @@ export const PlanningSheetPreview = ({ data }) => {
         <div className="font-bold">Colour: <span className="font-normal">{data.colour}</span></div>
         <div className="font-bold">Order Qnty: <span className="font-normal">{data.orderQnty}</span></div>
         <div className="font-bold">Req Prod(m): <span className="font-normal">{data.reqProd}</span></div>
-        <div className="font-bold">Set Length: <span className="font-normal">{data.setLength}</span></div>
+        <div className="text-[15px] font-black border-2 border-black px-2 py-0.5 bg-yellow-100 flex justify-between items-center -my-0.5 rounded">
+          <span>Set Length:</span>
+          <span className="text-lg font-black underline">{data.setLength}</span>
+        </div>
         
         <div className="font-bold">P. Dyeing: <span className="font-normal">{data.pDyeing}</span></div>
         <div className="font-bold">Remain: <span className="font-normal">{data.remain1}</span></div>
