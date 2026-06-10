@@ -9,6 +9,7 @@ const ActiveOrders = ({ currentPage, onNavigate, onAdminClick, onEditOrder, stat
   const [selectedRowId, setSelectedRowId] = useState(null);
   const [sortAscending, setSortAscending] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editTarget, setEditTarget] = useState(null);
 
   useEffect(() => {
     loadOrders();
@@ -270,7 +271,7 @@ const ActiveOrders = ({ currentPage, onNavigate, onAdminClick, onEditOrder, stat
           <button 
             onClick={() => {
               const target = filteredOrders.find(o => o.id === selectedRowId);
-              if (target) onEditOrder(target);
+              if (target) setEditTarget(target);
               else alert('Please select a row first.');
             }}
             className="sap-btn"
@@ -391,7 +392,7 @@ const ActiveOrders = ({ currentPage, onNavigate, onAdminClick, onEditOrder, stat
                       <td className="p-0 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <button 
-                            onClick={(e) => { e.stopPropagation(); onEditOrder(order); }}
+                            onClick={(e) => { e.stopPropagation(); setEditTarget(order); }}
                             className="text-blue-600 dark:text-blue-400 hover:underline px-2 py-1 text-xs font-bold"
                           >
                             Edit
@@ -412,6 +413,16 @@ const ActiveOrders = ({ currentPage, onNavigate, onAdminClick, onEditOrder, stat
             </table>
           </div>
         </section>
+        <PasswordPromptModal
+          isOpen={editTarget !== null}
+          title={editTarget ? `Edit Active Order: ${editTarget.piNo || editTarget.id}` : ''}
+          onClose={() => setEditTarget(null)}
+          onSubmit={async () => {
+            const target = editTarget;
+            setEditTarget(null);
+            onEditOrder(target);
+          }}
+        />
         <PasswordPromptModal
           isOpen={deleteTarget !== null}
           title={deleteTarget ? `Delete Active Order PI: ${deleteTarget.piNo}` : ''}

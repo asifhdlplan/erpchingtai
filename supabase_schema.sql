@@ -137,5 +137,23 @@ alter table erp_yarn_demands enable row level security;
 -- Create policy for erp_yarn_demands
 create policy "Allow all actions for anon on erp_yarn_demands" on erp_yarn_demands
   for all to anon using (true) with check (true);
+-- 7. Create erp_yarn_receipts table
+create table if not exists erp_yarn_receipts (
+  id text primary key,
+  plant text,
+  "storageLocation" text,
+  "materialDescription" text,
+  unit text,
+  "supplierName" text,
+  "supplierLot" text,
+  "receiveQty" numeric default 0,
+  "rcvDate" text,
+  "createdAt" timestamp with time zone default timezone('utc'::text, now()) not null
+);
 
+-- Enable RLS on erp_yarn_receipts
+alter table erp_yarn_receipts enable row level security;
 
+-- Create policy for erp_yarn_receipts
+create policy "Allow all actions for anon on erp_yarn_receipts" on erp_yarn_receipts
+  for all to anon using (true) with check (true);

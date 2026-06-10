@@ -11,6 +11,7 @@ const AllYarnDemands = ({ currentPage, onNavigate, onAdminClick, onEditDemand, s
   
   // Modals / Preview state
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editTarget, setEditTarget] = useState(null);
   const [selectedDemand, setSelectedDemand] = useState(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   
@@ -305,7 +306,7 @@ create policy "Allow all actions for anon on erp_yarn_demands" on erp_yarn_deman
                           📄 View PDF
                         </button>
                         <button
-                          onClick={() => onEditDemand(demand)}
+                          onClick={() => setEditTarget(demand)}
                           className="px-2.5 py-1 text-xs font-bold text-slate-750 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 border border-slate-250 dark:border-slate-750 rounded transition"
                         >
                           ✏️ Edit
@@ -324,6 +325,18 @@ create policy "Allow all actions for anon on erp_yarn_demands" on erp_yarn_deman
             </tbody>
           </table>
         </div>
+
+        {/* Edit password confirmation popup */}
+        <PasswordPromptModal
+          isOpen={editTarget !== null}
+          title={editTarget ? `Edit Yarn Demand PR: ${editTarget.prNo}` : ''}
+          onClose={() => setEditTarget(null)}
+          onSubmit={async () => {
+            const target = editTarget;
+            setEditTarget(null);
+            onEditDemand(target);
+          }}
+        />
 
         {/* Delete password confirmation popup */}
         <PasswordPromptModal

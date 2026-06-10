@@ -47,15 +47,15 @@ export const authStorage = {
   },
 
   getSession() {
-    return safeParse(localStorage.getItem(STORAGE_KEYS.SESSION), null);
+    return safeParse(sessionStorage.getItem(STORAGE_KEYS.SESSION), null);
   },
 
   setSession(session) {
-    localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+    sessionStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
   },
 
   clearSession() {
-    localStorage.removeItem(STORAGE_KEYS.SESSION);
+    sessionStorage.removeItem(STORAGE_KEYS.SESSION);
   },
 
   async getAdminPassword() {

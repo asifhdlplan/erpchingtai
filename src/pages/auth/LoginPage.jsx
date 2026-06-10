@@ -80,7 +80,7 @@ const LoginPage = ({ onLogin }) => {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               {/* Username Input */}
               <div className="flex flex-col">
                 <label className="sap-label mb-1">User ID</label>
@@ -90,6 +90,7 @@ const LoginPage = ({ onLogin }) => {
                   onChange={(e) => { setForm({ ...form, username: e.target.value }); setError(''); }}
                   className="w-full uppercase font-mono font-semibold sap-required"
                   placeholder="Enter User ID (e.g. ASIF)"
+                  autoComplete="off"
                   autoFocus
                   required
                 />
@@ -105,6 +106,7 @@ const LoginPage = ({ onLogin }) => {
                     onChange={(e) => { setForm({ ...form, password: e.target.value }); setError(''); }}
                     className="w-full font-mono sap-required pr-16"
                     placeholder="••••••••••••"
+                    autoComplete="new-password"
                     required
                   />
                   <button 

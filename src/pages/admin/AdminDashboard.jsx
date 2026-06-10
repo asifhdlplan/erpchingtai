@@ -264,7 +264,7 @@ const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStat
                 </div>
                 <div className="flex items-center">
                   <label className="w-28 sap-label">Initial Password</label>
-                  <input type="password" className="flex-1 sap-required" placeholder="••••••••" value={form.password} onChange={(e)=>setForm({...form, password:e.target.value})}/>
+                  <input type="password" autoComplete="new-password" className="flex-1 sap-required" placeholder="••••••••" value={form.password} onChange={(e)=>setForm({...form, password:e.target.value})}/>
                 </div>
                 <button className="sap-btn w-full mt-2">Create Profile</button>
               </form>
@@ -275,18 +275,18 @@ const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStat
               <div className="border-b border-[#B8C2CC] pb-1.5 mb-3 font-bold text-xs uppercase text-slate-700">
                 Change Admin Bypass
               </div>
-              <form onSubmit={changeAdminPassword} className="space-y-3">
+              <form onSubmit={changeAdminPassword} className="space-y-3" autoComplete="off">
                 <div className="flex items-center">
                   <label className="w-28 sap-label">Old Password</label>
-                  <input type="password" className="flex-1 sap-required" placeholder="••••••••" value={adminPwd.oldPassword} onChange={(e)=>setAdminPwd({...adminPwd, oldPassword:e.target.value})}/>
+                  <input type="password" autoComplete="new-password" className="flex-1 sap-required" placeholder="••••••••" value={adminPwd.oldPassword} onChange={(e)=>setAdminPwd({...adminPwd, oldPassword:e.target.value})}/>
                 </div>
                 <div className="flex items-center">
                   <label className="w-28 sap-label">New Password</label>
-                  <input type="password" className="flex-1 sap-required" placeholder="••••••••" value={adminPwd.newPassword} onChange={(e)=>setAdminPwd({...adminPwd, newPassword:e.target.value})}/>
+                  <input type="password" autoComplete="new-password" className="flex-1 sap-required" placeholder="••••••••" value={adminPwd.newPassword} onChange={(e)=>setAdminPwd({...adminPwd, newPassword:e.target.value})}/>
                 </div>
                 <div className="flex items-center">
                   <label className="w-28 sap-label">Confirm Pass</label>
-                  <input type="password" className="flex-1 sap-required" placeholder="••••••••" value={adminPwd.confirmPassword} onChange={(e)=>setAdminPwd({...adminPwd, confirmPassword:e.target.value})}/>
+                  <input type="password" autoComplete="new-password" className="flex-1 sap-required" placeholder="••••••••" value={adminPwd.confirmPassword} onChange={(e)=>setAdminPwd({...adminPwd, confirmPassword:e.target.value})}/>
                 </div>
                 <button className="sap-btn w-full mt-2">Update Bypass</button>
               </form>

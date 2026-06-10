@@ -17,6 +17,7 @@ import YarnStockOverview from './pages/YarnStockOverview';
 import YarnStockEntry from './pages/YarnStockEntry';
 import YarnDemandCreation from './pages/YarnDemandCreation';
 import AllYarnDemands from './pages/AllYarnDemands';
+import AllYarnList from './pages/AllYarnList';
 
 const ERPApp = () => {
   const [currentPage, setCurrentPage] = useState('sap_easy_access');
@@ -154,6 +155,16 @@ const ERPApp = () => {
       case 'yarn_stock_entry':
         return (
           <YarnStockEntry 
+            currentPage={currentPage} 
+            onNavigate={handleNavigate} 
+            onAdminClick={() => setShowAdminPanel(true)} 
+            status={status}
+            setStatus={setStatus}
+          />
+        );
+      case 'all_yarn_list':
+        return (
+          <AllYarnList 
             currentPage={currentPage} 
             onNavigate={handleNavigate} 
             onAdminClick={() => setShowAdminPanel(true)} 

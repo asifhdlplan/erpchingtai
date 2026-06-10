@@ -41,6 +41,7 @@ export const PasswordPromptModal = ({ isOpen, title, onClose, onSubmit }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••"
+              autoComplete="new-password"
               autoFocus
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-505 font-mono"
             />

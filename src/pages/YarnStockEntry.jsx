@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { yarnStockStorage } from '../services/yarnStockStorage';
+import { yarnReceiptStorage } from '../services/yarnReceiptStorage';
 
 const YarnStockEntry = ({ currentPage, onNavigate, onAdminClick, status, setStatus }) => {
   const entryAreaRef = useRef(null);
@@ -37,6 +38,11 @@ const YarnStockEntry = ({ currentPage, onNavigate, onAdminClick, status, setStat
     try {
       if (setStatus) setStatus({ text: 'Posting goods receipt to ledger...', type: 'W' });
       await yarnStockStorage.saveYarnStock(formData);
+      try {
+        await yarnReceiptStorage.saveYarnReceipt(formData);
+      } catch (receiptErr) {
+        console.error('Failed to log historical receipt:', receiptErr);
+      }
       if (setStatus) setStatus({ text: `Goods receipt for lot ${formData.supplierLot} posted successfully.`, type: 'S' });
       alert('Yarn Stock Goods Receipt posted successfully!');
       resetForm();
@@ -340,6 +346,11 @@ const YarnStockEntry = ({ currentPage, onNavigate, onAdminClick, status, setStat
     for (const row of validRows) {
       try {
         await yarnStockStorage.saveYarnStock(row.data);
+        try {
+          await yarnReceiptStorage.saveYarnReceipt(row.data);
+        } catch (receiptErr) {
+          console.error('Failed to log historical receipt in bulk import:', receiptErr);
+        }
         successCount++;
       } catch (err) {
         console.error('Bulk save item failed:', err, row.data);

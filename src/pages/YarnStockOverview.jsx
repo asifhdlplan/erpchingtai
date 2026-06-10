@@ -3,6 +3,149 @@ import { PageLayout } from '../components/layout/PageLayout';
 import { yarnStockStorage } from '../services/yarnStockStorage';
 import { PasswordPromptModal } from '../components/ui/PasswordPromptModal';
 
+const YarnStockEditModal = ({ isOpen, item, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    materialDescription: '',
+    supplierName: '',
+    supplierLot: '',
+    unrestrictedStock: '',
+    unit: '',
+    plant: '',
+    storageLocation: ''
+  });
+
+  useEffect(() => {
+    if (item) {
+      setFormData({
+        materialDescription: item.materialDescription || '',
+        supplierName: item.supplierName || '',
+        supplierLot: item.supplierLot || '',
+        unrestrictedStock: item.unrestrictedStock !== undefined ? String(item.unrestrictedStock) : '',
+        unit: item.unit || 'KG',
+        plant: item.plant || '',
+        storageLocation: item.storageLocation || ''
+      });
+    }
+  }, [item]);
+
+  if (!isOpen || !item) return null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({
+      ...item,
+      ...formData,
+      unrestrictedStock: parseFloat(formData.unrestrictedStock) || 0
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl max-w-lg w-full overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 text-left">
+        <div className="bg-slate-50 dark:bg-slate-900/60 px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm uppercase tracking-wider">
+            Edit Yarn Stock Item
+          </h3>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-650 dark:hover:text-slate-300 focus:outline-none text-lg">
+            ✕
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Material Description (Yarn Name) <span className="text-rose-500">*</span></label>
+              <input
+                type="text"
+                required
+                value={formData.materialDescription}
+                onChange={e => setFormData({ ...formData, materialDescription: e.target.value })}
+                className="w-full text-xs px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 rounded bg-transparent text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Supplier Name <span className="text-rose-500">*</span></label>
+                <input
+                  type="text"
+                  required
+                  value={formData.supplierName}
+                  onChange={e => setFormData({ ...formData, supplierName: e.target.value })}
+                  className="w-full text-xs px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 rounded bg-transparent text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Supplier Lot</label>
+                <input
+                  type="text"
+                  value={formData.supplierLot}
+                  onChange={e => setFormData({ ...formData, supplierLot: e.target.value })}
+                  className="w-full text-xs px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 rounded bg-transparent text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Unrestricted Qty <span className="text-rose-500">*</span></label>
+                <input
+                  type="number"
+                  step="any"
+                  required
+                  value={formData.unrestrictedStock}
+                  onChange={e => setFormData({ ...formData, unrestrictedStock: e.target.value })}
+                  className="w-full text-xs px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 rounded bg-transparent text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 font-bold font-mono"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Unit <span className="text-rose-500">*</span></label>
+                <input
+                  type="text"
+                  required
+                  value={formData.unit}
+                  onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                  className="w-full text-xs px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 rounded bg-transparent text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Plant</label>
+                <input
+                  type="text"
+                  value={formData.plant}
+                  onChange={e => setFormData({ ...formData, plant: e.target.value })}
+                  className="w-full text-xs px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 rounded bg-transparent text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Storage Location</label>
+                <input
+                  type="text"
+                  value={formData.storageLocation}
+                  onChange={e => setFormData({ ...formData, storageLocation: e.target.value })}
+                  className="w-full text-xs px-2.5 py-1.5 border border-slate-200 dark:border-slate-800 rounded bg-transparent text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <button type="button" onClick={onClose} className="sap-btn sap-btn-secondary py-1.5 px-4 text-xs font-bold">
+              Cancel
+            </button>
+            <button type="submit" className="sap-btn py-1.5 px-4 text-xs font-bold">
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const YarnStockOverview = ({ currentPage, onNavigate, onAdminClick, status, setStatus }) => {
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,6 +153,8 @@ const YarnStockOverview = ({ currentPage, onNavigate, onAdminClick, status, setS
   const [sortField, setSortField] = useState('createdAt');
   const [sortAsc, setSortAsc] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+  const [editTarget, setEditTarget] = useState(null);
   const [cloudStatus, setCloudStatus] = useState({
     checked: false,
     exists: true,
@@ -111,6 +256,18 @@ create policy "Allow all actions for anon on erp_yarn_stock" on erp_yarn_stock
 
   const handleDeleteItem = (item) => {
     setDeleteTarget(item);
+  };
+
+  const handleSaveEdit = async (updatedItem) => {
+    try {
+      await yarnStockStorage.saveYarnStock(updatedItem);
+      if (setStatus) setStatus({ text: `Yarn stock item "${updatedItem.materialDescription}" updated successfully.`, type: 'S' });
+      setEditingItem(null);
+      loadStocks();
+    } catch (error) {
+      console.error('Update stock error:', error);
+      if (setStatus) setStatus({ text: 'Failed to update yarn stock item.', type: 'E' });
+    }
   };
 
   const sortedStocks = React.useMemo(() => {
@@ -328,7 +485,13 @@ create policy "Allow all actions for anon on erp_yarn_stock" on erp_yarn_stock
                     <td className="font-mono text-slate-500 dark:text-slate-400">
                       {item.lastGoodsReceiptDate ? new Date(item.lastGoodsReceiptDate).toLocaleDateString() : '-'}
                     </td>
-                    <td className="text-center p-1">
+                    <td className="text-center p-1 flex items-center justify-center gap-1.5">
+                      <button 
+                        onClick={() => setEditTarget(item)}
+                        className="px-2.5 py-1 text-xs font-bold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded transition"
+                      >
+                        Edit
+                      </button>
                       <button 
                         onClick={() => handleDeleteItem(item)}
                         className="px-2.5 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded transition"
@@ -342,6 +505,16 @@ create policy "Allow all actions for anon on erp_yarn_stock" on erp_yarn_stock
             </tbody>
           </table>
         </div>
+        <PasswordPromptModal
+          isOpen={editTarget !== null}
+          title={editTarget ? `Edit Yarn Stock: ${editTarget.materialDescription}` : ''}
+          onClose={() => setEditTarget(null)}
+          onSubmit={async () => {
+            const item = editTarget;
+            setEditTarget(null);
+            setEditingItem(item);
+          }}
+        />
         <PasswordPromptModal
           isOpen={deleteTarget !== null}
           title={deleteTarget ? `Delete Yarn Stock: ${deleteTarget.materialDescription}` : ''}
@@ -361,6 +534,12 @@ create policy "Allow all actions for anon on erp_yarn_stock" on erp_yarn_stock
               if (setStatus) setStatus({ text: 'Failed to delete item from stock.', type: 'E' });
             }
           }}
+        />
+        <YarnStockEditModal
+          isOpen={editingItem !== null}
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSave={handleSaveEdit}
         />
       </div>
     </PageLayout>

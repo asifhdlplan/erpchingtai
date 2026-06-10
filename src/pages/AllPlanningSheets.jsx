@@ -15,6 +15,7 @@ const AllPlanningSheets = ({ currentPage, onNavigate, onAdminClick, onEditPlan, 
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [sortAscending, setSortAscending] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [editTarget, setEditTarget] = useState(null);
 
   useEffect(() => {
     loadSheets();
@@ -222,7 +223,7 @@ const AllPlanningSheets = ({ currentPage, onNavigate, onAdminClick, onEditPlan, 
               <button 
                 onClick={() => {
                   const target = filteredSheets.find(s => s.id === selectedRowId);
-                  if (target) onEditPlan(target);
+                  if (target) setEditTarget(target);
                   else alert('Please select a row in the ALV Grid first.');
                 }} 
                 className="sap-btn sap-btn-secondary"
@@ -336,7 +337,7 @@ const AllPlanningSheets = ({ currentPage, onNavigate, onAdminClick, onEditPlan, 
                                 View
                               </button>
                               <button 
-                                onClick={() => onEditPlan(sheet)}
+                                onClick={() => setEditTarget(sheet)}
                                 className="text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-955/20 px-2 py-1 text-xs font-semibold rounded"
                               >
                                 Edit
@@ -376,6 +377,16 @@ const AllPlanningSheets = ({ currentPage, onNavigate, onAdminClick, onEditPlan, 
             <PlanningSheetPreview data={selectedSheet} />
           </div>
         )}
+        <PasswordPromptModal
+          isOpen={editTarget !== null}
+          title={editTarget ? `Edit Plan Set: ${editTarget.setNo}` : ''}
+          onClose={() => setEditTarget(null)}
+          onSubmit={async () => {
+            const target = editTarget;
+            setEditTarget(null);
+            onEditPlan(target);
+          }}
+        />
         <PasswordPromptModal
           isOpen={deleteTarget !== null}
           title={deleteTarget ? `Delete Plan Set: ${deleteTarget.setNo}` : ''}

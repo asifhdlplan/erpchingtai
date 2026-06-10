@@ -306,6 +306,12 @@ export const PageLayout = ({
                             Yarn Stock Status
                           </div>
                           <div 
+                            onClick={() => onNavigate('all_yarn_list')}
+                            className={`sap-tree-item ${currentPage === 'all_yarn_list' ? 'active' : ''}`}
+                          >
+                            All Yarn List
+                          </div>
+                          <div 
                             onClick={() => onNavigate('yarn_demand_creation')}
                             className={`sap-tree-item ${currentPage === 'yarn_demand_creation' ? 'active' : ''}`}
                           >
