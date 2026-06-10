@@ -210,6 +210,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
       const firstWeaving = editingPlan.weavingRows?.[0] || {};
       setWeavingFabric({
         greyConstruction: firstWeaving.greyConstruction || '',
+        finishConstruction: firstWeaving.finishConstruction || '',
         weave: firstWeaving.weave || '',
         weftRatio: firstWeaving.weftRatio || '',
         reedSpace: firstWeaving.reedSpace || '',
@@ -239,6 +240,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
       fetchSetNo();
       setWeavingFabric({
         greyConstruction: '',
+        finishConstruction: '',
         weave: '',
         weftRatio: '',
         reedSpace: '',
@@ -555,6 +557,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
     setWeavingRows([{}]);
     setWeavingFabric({
       greyConstruction: '',
+      finishConstruction: '',
       weave: '',
       weftRatio: '',
       reedSpace: '',
@@ -771,6 +774,12 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
                       className={`sap-tab ${activeTab === 'weaving' ? 'active' : ''}`}
                     >
                       Weaving Information
+                    </div>
+                    <div 
+                      onClick={() => setActiveTab('finishing')}
+                      className={`sap-tab ${activeTab === 'finishing' ? 'active' : ''}`}
+                    >
+                      Finishing Information
                     </div>
                   </div>
 
@@ -1009,6 +1018,28 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
                                 ))}
                               </tbody>
                             </table>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* finishing tab panel */}
+                    {activeTab === 'finishing' && (
+                      <div className="space-y-4 animate-in fade-in duration-200">
+                        <div className="border-b border-slate-200 dark:border-slate-800 pb-2 font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          04. Finishing Details
+                        </div>
+                        <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-5">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="flex items-center">
+                              <label className="w-36 sap-label">Finish Construction</label>
+                              <input 
+                                type="text" 
+                                value={weavingFabric.finishConstruction || ''} 
+                                onChange={e => handleFabricChange('finishConstruction', e.target.value)} 
+                                className="flex-1 text-xs" 
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>

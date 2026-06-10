@@ -9,24 +9,24 @@ export const PlanningSheetPreview = ({ data }) => {
   const weavingTotalQtyKg = (data.weavingRows || []).reduce((sum, row) => sum + (parseFloat(row.qtyKg) || 0), 0);
 
   return (
-    <div className="print-only bg-white text-black p-8 w-[210mm] min-h-[297mm] mx-auto border shadow-lg" id="printable-sheet">
-      <div className="text-center border-b-2 border-black pb-4 mb-6">
+    <div className="print-only bg-white text-black p-5 w-[210mm] min-h-[297mm] mx-auto border shadow-lg" id="printable-sheet">
+      <div className="text-center border-b-2 border-black pb-3 mb-4">
         <h1 className="text-2xl font-black uppercase">Ha-Meem Ching Tai Pocketing & Accessories Ltd.</h1>
         <p className="text-xs font-semibold uppercase mt-1">Polash, Narshingdi</p>
-        <h2 className="text-xl font-bold uppercase mt-2">Planning Sheet</h2>
+        <h2 className="text-xl font-bold uppercase mt-1.5">Planning Sheet</h2>
       </div>
 
-      <div className="grid grid-cols-4 gap-y-2 gap-x-4 text-xs border border-black p-4 mb-6">
-        <div className="font-bold text-[13px] whitespace-nowrap">Set No: <span className="font-bold text-sm underline ml-1">{data.setNo}</span></div>
+      <div className="grid grid-cols-4 gap-y-2 gap-x-4 text-sm border border-black p-3.5 mb-4">
+        <div className="font-bold whitespace-nowrap">Set No: <span className="font-bold text-base underline ml-1">{data.setNo}</span></div>
         <div className="font-bold">User: <span className="font-normal">{data.sizing?.createdBy || 'ASIF'}</span></div>
-        <div className="font-bold text-right col-span-2">Date: <span className="font-normal">{data.date}{data.sizing?.createdAtTime ? ` @ ${data.sizing.createdAtTime}` : ''}</span></div>
-        
-        <div className="font-bold text-[13px] whitespace-nowrap">Style/Code: <span className="font-bold text-sm underline ml-1">{data.styleCode}</span></div>
         <div className="font-bold">Buyer: <span className="font-normal">{data.buyer}</span></div>
+        <div className="font-bold text-right">Date: <span className="font-normal">{data.date}</span></div>
+        
+        <div className="font-bold whitespace-nowrap col-span-2">Style/Code: <span className="font-bold text-base underline ml-1">{data.styleCode}</span></div>
         <div className="font-bold">End Buyer: <span className="font-normal">{data.endBuyer}</span></div>
         <div className="font-bold">MKT Person: <span className="font-normal">{data.mktPerson}</span></div>
         
-        <div className="font-bold text-[13px] whitespace-nowrap">Set Length: <span className="font-bold text-sm underline ml-1">{data.setLength}</span></div>
+        <div className="font-bold whitespace-nowrap">Set Length: <span className="font-bold text-base underline ml-1">{data.setLength}</span></div>
         <div className="font-bold">Order Ref: <span className="font-normal">{data.orderRef}</span></div>
         <div className="font-bold">PI Width: <span className="font-normal">{data.piWidth}</span></div>
         <div className="font-bold">PI Shrink: <span className="font-normal">{data.piShrink}</span></div>
@@ -42,9 +42,9 @@ export const PlanningSheetPreview = ({ data }) => {
         <div className="font-bold">Remain: <span className="font-normal">{data.remain2}</span></div>
       </div>
 
-      <div className="mb-6">
-        <h3 className="text-sm font-bold uppercase border-b border-black mb-2">01. Warping Information</h3>
-        <table className="w-full text-[10px] border-collapse border border-black">
+      <div className="mb-4">
+        <h3 className="text-sm font-bold uppercase border-b border-black mb-1.5">01. Warping Information</h3>
+        <table className="w-full text-xs border-collapse border border-black">
           <thead>
             <tr className="bg-gray-100">
               <th className="border border-black p-1">Yarn Name</th>
@@ -80,29 +80,29 @@ export const PlanningSheetPreview = ({ data }) => {
         </table>
       </div>
 
-      <div className="mb-6">
-        <h3 className="text-sm font-bold uppercase border-b border-black mb-2">02. Sizing Information</h3>
-        <table className="w-full text-xs border-collapse border border-black">
+      <div className="mb-4">
+        <h3 className="text-sm font-bold uppercase border-b border-black mb-1.5">02. Sizing Information</h3>
+        <table className="w-full text-sm border-collapse border border-black">
           <tbody>
             <tr>
-              <td className="border border-black p-2 font-bold w-1/4">Beam Space (inch)</td>
-              <td className="border border-black p-2">{data.sizing.beamSpace}</td>
-              <td className="border border-black p-2 font-bold w-1/4">Beam Type</td>
-              <td className="border border-black p-2">{data.sizing.beamType}</td>
-              <td className="border border-black p-2 font-bold w-1/4">No of Beam</td>
-              <td className="border border-black p-2">{data.sizing.noOfBeam}</td>
+              <td className="border border-black p-1.5 font-bold w-1/4">Beam Space (inch)</td>
+              <td className="border border-black p-1.5">{data.sizing.beamSpace}</td>
+              <td className="border border-black p-1.5 font-bold w-1/4">Beam Type</td>
+              <td className="border border-black p-1.5">{data.sizing.beamType}</td>
+              <td className="border border-black p-1.5 font-bold w-1/4">No of Beam</td>
+              <td className="border border-black p-1.5">{data.sizing.noOfBeam}</td>
             </tr>
             <tr>
-              <td className="border border-black p-2 font-bold" colSpan="3">Beam Length (m)</td>
-              <td className="border border-black p-2" colSpan="3">{data.sizing.beamLength}</td>
+              <td className="border border-black p-1.5 font-bold" colSpan="3">Beam Length (m)</td>
+              <td className="border border-black p-1.5" colSpan="3">{data.sizing.beamLength}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div className="mb-6">
-        <h3 className="text-sm font-bold uppercase border-b border-black mb-2">03. Weaving Information</h3>
-        <table className="w-full text-[10px] border-collapse border border-black">
+      <div className="mb-4">
+        <h3 className="text-sm font-bold uppercase border-b border-black mb-1.5">03. Weaving Information</h3>
+        <table className="w-full text-xs border-collapse border border-black">
           <thead>
             <tr className="bg-gray-100">
               <th className="border border-black p-1">Grey Construction</th>
@@ -136,7 +136,7 @@ export const PlanningSheetPreview = ({ data }) => {
             )}
           </tbody>
         </table>
-        <table className="w-full text-[10px] border-collapse border border-black mt-2">
+        <table className="w-full text-xs border-collapse border border-black mt-1.5">
           <thead>
             <tr className="bg-gray-100">
               <th className="border border-black p-1">Yarn Name</th>
@@ -170,18 +170,30 @@ export const PlanningSheetPreview = ({ data }) => {
         </table>
       </div>
 
-      <div className="mb-12">
-        <div className="font-bold text-sm uppercase border-b border-black mb-1">Remarks:</div>
-        <div className="text-xs p-2 border border-black min-h-[40px]">{data.remarks}</div>
+      <div className="mb-4">
+        <h3 className="text-sm font-bold uppercase border-b border-black mb-1.5">04. Finishing Information</h3>
+        <table className="w-full text-sm border-collapse border border-black">
+          <tbody>
+            <tr>
+              <td className="border border-black p-1.5 font-bold w-1/4">Finish Construction</td>
+              <td className="border border-black p-1.5">{data.weavingRows?.[0]?.finishConstruction || ''}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <div className="grid grid-cols-6 gap-4 text-center text-[10px] mt-40 pt-20">
-        <div className="border-t border-black pt-2 font-bold">Prepared By</div>
-        <div className="border-t border-black pt-2 font-bold">Checked By</div>
-        <div className="border-t border-black pt-2 font-bold">AGM Weaving</div>
-        <div className="border-t border-black pt-2 font-bold">AGM Dyeing</div>
-        <div className="border-t border-black pt-2 font-bold">QA Head</div>
-        <div className="border-t border-black pt-2 font-bold">GM Plant</div>
+      <div className="mb-4">
+        <div className="font-bold text-sm uppercase border-b border-black mb-1">Remarks:</div>
+        <div className="text-sm p-1.5 border border-black min-h-[35px]">{data.remarks}</div>
+      </div>
+
+      <div className="grid grid-cols-6 gap-2 text-center text-xs mt-20 pt-4">
+        <div className="border-t border-black pt-1.5 font-bold">Prepared By</div>
+        <div className="border-t border-black pt-1.5 font-bold">Checked By</div>
+        <div className="border-t border-black pt-1.5 font-bold">AGM Weaving</div>
+        <div className="border-t border-black pt-1.5 font-bold">AGM Dyeing</div>
+        <div className="border-t border-black pt-1.5 font-bold">QA Head</div>
+        <div className="border-t border-black pt-1.5 font-bold">GM Plant</div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
