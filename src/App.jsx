@@ -31,17 +31,19 @@ const ERPApp = () => {
 
   const isAdminRoute = window.location.pathname === '/admin';
 
-  const handleNavigate = (page) => {
+  const handleNavigate = (page, isEdit = false) => {
     // Clear status bar and editing targets upon changing screens
     setStatus({ text: '', type: '' });
-    if (page === 'order_receive') {
-      setEditingOrder(null);
-    }
-    if (page === 'planning_creation') {
-      setEditingPlan(null);
-    }
-    if (page === 'yarn_demand_creation') {
-      setEditingDemand(null);
+    if (!isEdit) {
+      if (page === 'order_receive') {
+        setEditingOrder(null);
+      }
+      if (page === 'planning_creation') {
+        setEditingPlan(null);
+      }
+      if (page === 'yarn_demand_creation') {
+        setEditingDemand(null);
+      }
     }
     
     if (page === 'admin_dashboard') {
@@ -83,7 +85,7 @@ const ERPApp = () => {
             onAdminClick={() => setShowAdminPanel(true)} 
             onEditOrder={(order) => { 
               setEditingOrder(order); 
-              handleNavigate('order_receive'); 
+              handleNavigate('order_receive', true); 
             }}
             status={status}
             setStatus={setStatus}
@@ -97,7 +99,7 @@ const ERPApp = () => {
             onAdminClick={() => setShowAdminPanel(true)} 
             onEditOrder={(order) => { 
               setEditingOrder(order); 
-              handleNavigate('order_receive'); 
+              handleNavigate('order_receive', true); 
             }}
             status={status}
             setStatus={setStatus}
@@ -123,7 +125,7 @@ const ERPApp = () => {
             onAdminClick={() => setShowAdminPanel(true)} 
             onEditPlan={(plan) => {
               setEditingPlan(plan);
-              handleNavigate('planning_creation');
+              handleNavigate('planning_creation', true);
             }}
             status={status}
             setStatus={setStatus}
@@ -179,7 +181,7 @@ const ERPApp = () => {
             onAdminClick={() => setShowAdminPanel(true)}
             onEditDemand={(demand) => {
               setEditingDemand(demand);
-              setCurrentPage('yarn_demand_creation');
+              handleNavigate('yarn_demand_creation', true);
             }}
             status={status}
             setStatus={setStatus}
