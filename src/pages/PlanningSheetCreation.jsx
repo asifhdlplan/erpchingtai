@@ -167,6 +167,17 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
   const [warpingRows, setWarpingRows] = useState([{}]);
   const [sizingData, setSizingData] = useState({ beamSpace: '', beamType: '', noOfBeam: '', beamLength: '' });
   const [weavingRows, setWeavingRows] = useState([{}]);
+  const [weavingFabric, setWeavingFabric] = useState({
+    greyConstruction: '',
+    weave: '',
+    weftRatio: '',
+    reedSpace: '',
+    reed: '',
+    endsDent: '',
+    gWidth: '',
+    weight: '',
+    selvedge: ''
+  });
 
   useEffect(() => {
     if (editingPlan) {
@@ -196,6 +207,19 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
       setSizingData(editingPlan.sizing || { beamSpace: '', beamType: '', noOfBeam: '', beamLength: '' });
       setWeavingRows(editingPlan.weavingRows || [{}]);
       
+      const firstWeaving = editingPlan.weavingRows?.[0] || {};
+      setWeavingFabric({
+        greyConstruction: firstWeaving.greyConstruction || '',
+        weave: firstWeaving.weave || '',
+        weftRatio: firstWeaving.weftRatio || '',
+        reedSpace: firstWeaving.reedSpace || '',
+        reed: firstWeaving.reed || '',
+        endsDent: firstWeaving.endsDent || '',
+        gWidth: firstWeaving.gWidth || '',
+        weight: firstWeaving.weight || '',
+        selvedge: firstWeaving.selvedge || ''
+      });
+      
       if (editingPlan.orderId) {
         setSelectedOrder({ id: editingPlan.orderId, orderRef: editingPlan.orderRef });
       }
@@ -213,6 +237,17 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
         }));
       };
       fetchSetNo();
+      setWeavingFabric({
+        greyConstruction: '',
+        weave: '',
+        weftRatio: '',
+        reedSpace: '',
+        reed: '',
+        endsDent: '',
+        gWidth: '',
+        weight: '',
+        selvedge: ''
+      });
     }
   }, [editingPlan]);
 
@@ -245,7 +280,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
     const endsBeam = parseFloat(newRows[idx].endsBeam) || 0;
     const totalEnds = beam * endsBeam;
     newRows[idx].totalEnds = totalEnds;
-    newRows[idx].qtyKg = calculateWarpingQty(setLength, totalEnds).toFixed(3);
+    newRows[idx].qtyKg = calculateWarpingQty(setLength, totalEnds, newRows[idx].ratio, newRows[idx].yarnName).toFixed(3);
     
     setWarpingRows(newRows);
   };
@@ -261,7 +296,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
     const endsBeam = parseFloat(newRows[idx].endsBeam) || 0;
     const totalEnds = beam * endsBeam;
     newRows[idx].totalEnds = totalEnds;
-    newRows[idx].qtyKg = calculateWarpingQty(setLength, totalEnds).toFixed(3);
+    newRows[idx].qtyKg = calculateWarpingQty(setLength, totalEnds, newRows[idx].ratio, newRows[idx].yarnName).toFixed(3);
     
     setWarpingRows(newRows);
   };
@@ -273,7 +308,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
     const setLength = parseFloat(formData.setLength) || 0;
     const pickLength = parseFloat(newRows[idx].pickLength) || 0;
     const ppi = parseFloat(newRows[idx].ppi) || 0;
-    newRows[idx].qtyKg = calculateWeavingQty(setLength, pickLength, ppi).toFixed(3);
+    newRows[idx].qtyKg = calculateWeavingQty(setLength, pickLength, ppi, newRows[idx].ratio, newRows[idx].yarnName).toFixed(3);
     
     setWeavingRows(newRows);
   };
@@ -285,9 +320,66 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
     const setLength = parseFloat(formData.setLength) || 0;
     const pickLength = parseFloat(newRows[idx].pickLength) || 0;
     const ppi = parseFloat(newRows[idx].ppi) || 0;
-    newRows[idx].qtyKg = calculateWeavingQty(setLength, pickLength, ppi).toFixed(3);
+    newRows[idx].qtyKg = calculateWeavingQty(setLength, pickLength, ppi, newRows[idx].ratio, newRows[idx].yarnName).toFixed(3);
     
     setWeavingRows(newRows);
+  };
+
+  const handleSetLengthChange = (val) => {
+    setFormData(prev => ({ ...prev, setLength: val }));
+    const setLength = parseFloat(val) || 0;
+    
+    // Recalculate all warping rows
+    setWarpingRows(prev => prev.map(row => {
+      const beam = parseFloat(row.beam) || 0;
+      const endsBeam = parseFloat(row.endsBeam) || 0;
+      const totalEnds = beam * endsBeam;
+      return {
+        ...row,
+        perSet: setLength ? setLength.toFixed(2) : '0.00',
+        totalEnds,
+        qtyKg: calculateWarpingQty(setLength, totalEnds, row.ratio, row.yarnName).toFixed(3)
+      };
+    }));
+    
+    // Recalculate all weaving rows
+    setWeavingRows(prev => prev.map(row => {
+      const pickLength = parseFloat(row.pickLength) || 0;
+      const ppi = parseFloat(row.ppi) || 0;
+      return {
+        ...row,
+        qtyKg: calculateWeavingQty(setLength, pickLength, ppi, row.ratio, row.yarnName).toFixed(3)
+      };
+    }));
+  };
+
+  const handleFabricChange = (field, val) => {
+    setWeavingFabric(prev => {
+      const updated = { ...prev, [field]: val };
+      if (field === 'reedSpace') {
+        const rsNum = parseFloat(val);
+        if (!isNaN(rsNum)) {
+          const newPickLength = (rsNum + 3).toString();
+          setWeavingRows(rows => rows.map(row => {
+            const setLength = parseFloat(formData.setLength) || 0;
+            const ppi = parseFloat(row.ppi) || 0;
+            const qtyKg = calculateWeavingQty(setLength, parseFloat(newPickLength), ppi, row.ratio, row.yarnName).toFixed(3);
+            return {
+              ...row,
+              pickLength: newPickLength,
+              qtyKg
+            };
+          }));
+        }
+      }
+      return updated;
+    });
+  };
+
+  const insertWeavingRow = () => {
+    const rsNum = parseFloat(weavingFabric.reedSpace);
+    const initialPickLength = !isNaN(rsNum) ? (rsNum + 3).toString() : '';
+    setWeavingRows([...weavingRows, { pickLength: initialPickLength, ppi: '', ratio: '', qtyKg: '0' }]);
   };
 
   const handleSizingChange = (field, val) => {
@@ -304,6 +396,17 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
       return;
     }
 
+    const targetWeavingRows = weavingRows.length > 0 ? weavingRows : [{}];
+    const mergedWeavingRows = targetWeavingRows.map((row, i) => {
+      if (i === 0) {
+        return {
+          ...row,
+          ...weavingFabric
+        };
+      }
+      return row;
+    });
+
     const finalData = {
       ...formData,
       warpingRows,
@@ -312,7 +415,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
         createdBy: editingPlan ? (editingPlan.sizing?.createdBy || session?.username || 'ASIF') : (session?.username || 'ASIF'),
         createdAtTime: editingPlan ? (editingPlan.sizing?.createdAtTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
-      weavingRows,
+      weavingRows: mergedWeavingRows,
       orderId: selectedOrder?.id,
     };
     try {
@@ -447,6 +550,17 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
     setWarpingRows([{}]);
     setSizingData({ beamSpace: '', beamType: '', noOfBeam: '', beamLength: '' });
     setWeavingRows([{}]);
+    setWeavingFabric({
+      greyConstruction: '',
+      weave: '',
+      weftRatio: '',
+      reedSpace: '',
+      reed: '',
+      endsDent: '',
+      gWidth: '',
+      weight: '',
+      selvedge: ''
+    });
     setFormData(prev => ({
       date: new Date().toISOString().split('T')[0],
       buyer: '', styleCode: '', endBuyer: '', mktPerson: '', remarks: '',
@@ -584,7 +698,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
                     </div>
                     <div className="flex items-center">
                       <label className="w-28 sap-label">Set Length (m) <span className="text-red-600">*</span></label>
-                      <input type="number" value={formData.setLength} onChange={e => setFormData({...formData, setLength: e.target.value})} className="sap-required font-bold text-slate-800 dark:text-slate-200" placeholder="Required" />
+                      <input type="number" value={formData.setLength} onChange={e => handleSetLengthChange(e.target.value)} className="sap-required font-bold text-slate-800 dark:text-slate-200" placeholder="Required" />
                     </div>
                     <div className="flex items-center">
                       <label className="w-28 sap-label">PI-Width</label>
@@ -770,13 +884,6 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
                         <div className="space-y-3">
                           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-2">
                             <span className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">03. Weaving Fabric Parameters</span>
-                            <button 
-                              type="button"
-                              onClick={() => setWeavingRows([...weavingRows, {}])} 
-                              className="sap-btn"
-                            >
-                              ➕ Insert Weaving Line
-                            </button>
                           </div>
                           <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
                             <table className="sap-alv-table">
@@ -791,32 +898,20 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
                                   <th>G.Width</th>
                                   <th>Weight</th>
                                   <th>Selvedge</th>
-                                  <th className="text-center w-10">Act</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {weavingRows.map((row, i) => (
-                                  <tr key={i}>
-                                    <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={row.greyConstruction || ''} onChange={e => updateWeavingRow(i, 'greyConstruction', e.target.value)} /></td>
-                                    <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={row.weave || ''} onChange={e => updateWeavingRow(i, 'weave', e.target.value)} /></td>
-                                    <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={row.weftRatio || ''} onChange={e => updateWeavingRow(i, 'weftRatio', e.target.value)} /></td>
-                                    <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={row.reedSpace || ''} onChange={e => updateWeavingRow(i, 'reedSpace', e.target.value)} /></td>
-                                    <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={row.reed || ''} onChange={e => updateWeavingRow(i, 'reed', e.target.value)} /></td>
-                                    <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={row.endsDent || ''} onChange={e => updateWeavingRow(i, 'endsDent', e.target.value)} /></td>
-                                    <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={row.gWidth || ''} onChange={e => updateWeavingRow(i, 'gWidth', e.target.value)} /></td>
-                                    <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={row.weight || ''} onChange={e => updateWeavingRow(i, 'weight', e.target.value)} /></td>
-                                    <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={row.selvedge || ''} onChange={e => updateWeavingRow(i, 'selvedge', e.target.value)} /></td>
-                                    <td className="p-0 text-center">
-                                      <button 
-                                        type="button"
-                                        onClick={() => setWeavingRows(weavingRows.filter((_, idx) => idx !== i))} 
-                                        className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-semibold hover:bg-red-50 dark:hover:bg-red-950/20 w-full h-[22px] flex items-center justify-center text-[11px]"
-                                      >
-                                        Del
-                                      </button>
-                                    </td>
-                                  </tr>
-                                ))}
+                                <tr>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.greyConstruction || ''} onChange={e => handleFabricChange('greyConstruction', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.weave || ''} onChange={e => handleFabricChange('weave', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.weftRatio || ''} onChange={e => handleFabricChange('weftRatio', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.reedSpace || ''} onChange={e => handleFabricChange('reedSpace', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.reed || ''} onChange={e => handleFabricChange('reed', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.endsDent || ''} onChange={e => handleFabricChange('endsDent', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.gWidth || ''} onChange={e => handleFabricChange('gWidth', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.weight || ''} onChange={e => handleFabricChange('weight', e.target.value)} /></td>
+                                  <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1" value={weavingFabric.selvedge || ''} onChange={e => handleFabricChange('selvedge', e.target.value)} /></td>
+                                </tr>
                               </tbody>
                             </table>
                           </div>
@@ -824,8 +919,17 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
 
                         {/* Weft Yarn Details */}
                         <div className="space-y-3">
-                          <div className="border-b border-slate-200 dark:border-slate-800 pb-3 mb-2 font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                            04. Weft Yarn Requirements (calculated)
+                          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-2">
+                            <span className="font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              04. Weft Yarn Requirements (calculated)
+                            </span>
+                            <button 
+                              type="button"
+                              onClick={insertWeavingRow} 
+                              className="sap-btn"
+                            >
+                              ➕ Insert Weaving Line
+                            </button>
                           </div>
                           <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-lg">
                             <table className="sap-alv-table">
@@ -838,6 +942,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
                                   <th>Qty-Kg (Auto)</th>
                                   <th>Pick Length</th>
                                   <th>PPI</th>
+                                  <th className="text-center w-10">Act</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -864,6 +969,15 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
                                     <td className="bg-slate-50/50 dark:bg-slate-800/30 text-center font-semibold text-slate-800 dark:text-slate-200">{row.qtyKg || '0'}</td>
                                     <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1 bg-transparent" value={row.pickLength || ''} onChange={e => updateWeavingRow(i, 'pickLength', e.target.value)} /></td>
                                     <td className="p-0"><input className="w-full h-[22px] border-0 outline-none px-1 bg-transparent" value={row.ppi || ''} onChange={e => updateWeavingRow(i, 'ppi', e.target.value)} /></td>
+                                    <td className="p-0 text-center">
+                                      <button 
+                                        type="button"
+                                        onClick={() => setWeavingRows(weavingRows.filter((_, idx) => idx !== i))} 
+                                        className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-semibold hover:bg-red-50 dark:hover:bg-red-950/20 w-full h-[22px] flex items-center justify-center text-[11px]"
+                                      >
+                                        Del
+                                      </button>
+                                    </td>
                                   </tr>
                                 ))}
                               </tbody>

@@ -3,6 +3,11 @@ import React from 'react';
 export const PlanningSheetPreview = ({ data }) => {
   if (!data) return null;
 
+  // Calculate totals
+  const warpingTotalEnds = (data.warpingRows || []).reduce((sum, row) => sum + (parseFloat(row.totalEnds) || 0), 0);
+  const warpingTotalQtyKg = (data.warpingRows || []).reduce((sum, row) => sum + (parseFloat(row.qtyKg) || 0), 0);
+  const weavingTotalQtyKg = (data.weavingRows || []).reduce((sum, row) => sum + (parseFloat(row.qtyKg) || 0), 0);
+
   return (
     <div className="print-only bg-white text-black p-8 w-[210mm] min-h-[297mm] mx-auto border shadow-lg" id="printable-sheet">
       <div className="text-center border-b-2 border-black pb-4 mb-6">
@@ -65,6 +70,12 @@ export const PlanningSheetPreview = ({ data }) => {
                 <td className="border border-black p-1 text-center">{row.qtyKg}</td>
               </tr>
             ))}
+            {/* Warping Totals Row */}
+            <tr className="font-bold bg-gray-50/60">
+              <td colSpan="6" className="border border-black p-1.5 text-right uppercase">Total:</td>
+              <td className="border border-black p-1.5 text-center font-mono">{warpingTotalEnds.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+              <td className="border border-black p-1.5 text-center font-mono">{warpingTotalQtyKg.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -106,19 +117,23 @@ export const PlanningSheetPreview = ({ data }) => {
             </tr>
           </thead>
           <tbody>
-            {data.weavingRows.map((row, i) => (
-              <tr key={i}>
-                <td className="border border-black p-1 text-center">{row.greyConstruction}</td>
-                <td className="border border-black p-1 text-center">{row.weave}</td>
-                <td className="border border-black p-1 text-center">{row.weftRatio}</td>
-                <td className="border border-black p-1 text-center">{row.reedSpace}</td>
-                <td className="border border-black p-1 text-center">{row.reed}</td>
-                <td className="border border-black p-1 text-center">{row.endsDent}</td>
-                <td className="border border-black p-1 text-center">{row.gWidth}</td>
-                <td className="border border-black p-1 text-center">{row.weight}</td>
-                <td className="border border-black p-1 text-center">{row.selvedge}</td>
+            {data.weavingRows?.[0] ? (
+              <tr>
+                <td className="border border-black p-1 text-center">{data.weavingRows[0].greyConstruction}</td>
+                <td className="border border-black p-1 text-center">{data.weavingRows[0].weave}</td>
+                <td className="border border-black p-1 text-center">{data.weavingRows[0].weftRatio}</td>
+                <td className="border border-black p-1 text-center">{data.weavingRows[0].reedSpace}</td>
+                <td className="border border-black p-1 text-center">{data.weavingRows[0].reed}</td>
+                <td className="border border-black p-1 text-center">{data.weavingRows[0].endsDent}</td>
+                <td className="border border-black p-1 text-center">{data.weavingRows[0].gWidth}</td>
+                <td className="border border-black p-1 text-center">{data.weavingRows[0].weight}</td>
+                <td className="border border-black p-1 text-center">{data.weavingRows[0].selvedge}</td>
               </tr>
-            ))}
+            ) : (
+              <tr>
+                <td colSpan="9" className="border border-black p-1 text-center text-gray-400 italic">No parameters entered</td>
+              </tr>
+            )}
           </tbody>
         </table>
         <table className="w-full text-[10px] border-collapse border border-black mt-2">
@@ -145,6 +160,12 @@ export const PlanningSheetPreview = ({ data }) => {
                 <td className="border border-black p-1 text-center">{row.ppi}</td>
               </tr>
             ))}
+            {/* Weaving Totals Row */}
+            <tr className="font-bold bg-gray-50/60">
+              <td colSpan="4" className="border border-black p-1.5 text-right uppercase">Total:</td>
+              <td className="border border-black p-1.5 text-center font-mono">{weavingTotalQtyKg.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</td>
+              <td colSpan="2" className="border border-black p-1.5"></td>
+            </tr>
           </tbody>
         </table>
       </div>
