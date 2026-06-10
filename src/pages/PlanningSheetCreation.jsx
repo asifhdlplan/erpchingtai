@@ -372,6 +372,9 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
           }));
         }
       }
+      if (field === 'weave') {
+        setFormData(prevForm => ({ ...prevForm, weave: val }));
+      }
       return updated;
     });
   };
