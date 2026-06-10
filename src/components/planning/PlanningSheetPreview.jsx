@@ -17,12 +17,18 @@ export const PlanningSheetPreview = ({ data }) => {
       </div>
 
       <div className="grid grid-cols-4 gap-y-2 gap-x-4 text-xs border border-black p-4 mb-6">
-        <div className="font-bold">Set No: <span className="font-normal">{data.setNo}</span></div>
+        <div className="text-[15px] font-black border-2 border-black px-2 py-0.5 flex justify-between items-center -my-0.5 rounded">
+          <span>Set No:</span>
+          <span className="text-lg font-black underline">{data.setNo}</span>
+        </div>
         <div className="font-bold">User: <span className="font-normal">{data.sizing?.createdBy || 'ASIF'}</span></div>
         <div className="font-bold text-right col-span-2">Date: <span className="font-normal">{data.date}{data.sizing?.createdAtTime ? ` @ ${data.sizing.createdAtTime}` : ''}</span></div>
         
         <div className="font-bold">Buyer: <span className="font-normal">{data.buyer}</span></div>
-        <div className="font-bold">Style/Code: <span className="font-normal">{data.styleCode}</span></div>
+        <div className="text-[15px] font-black border-2 border-black px-2 py-0.5 flex justify-between items-center -my-0.5 rounded">
+          <span>Style/Code:</span>
+          <span className="text-lg font-black underline">{data.styleCode}</span>
+        </div>
         <div className="font-bold">End Buyer: <span className="font-normal">{data.endBuyer}</span></div>
         <div className="font-bold">MKT Person: <span className="font-normal">{data.mktPerson}</span></div>
         
@@ -34,7 +40,7 @@ export const PlanningSheetPreview = ({ data }) => {
         <div className="font-bold">Colour: <span className="font-normal">{data.colour}</span></div>
         <div className="font-bold">Order Qnty: <span className="font-normal">{data.orderQnty}</span></div>
         <div className="font-bold">Req Prod(m): <span className="font-normal">{data.reqProd}</span></div>
-        <div className="text-[15px] font-black border-2 border-black px-2 py-0.5 bg-yellow-100 flex justify-between items-center -my-0.5 rounded">
+        <div className="text-[15px] font-black border-2 border-black px-2 py-0.5 flex justify-between items-center -my-0.5 rounded">
           <span>Set Length:</span>
           <span className="text-lg font-black underline">{data.setLength}</span>
         </div>
