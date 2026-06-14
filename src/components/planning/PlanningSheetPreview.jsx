@@ -121,7 +121,7 @@ export const PlanningSheetPreview = ({ data }) => {
           <tbody>
             {data.weavingRows?.[0] ? (
               <tr>
-                <td className="border border-black p-1 text-center">{data.weavingRows[0].greyConstruction}</td>
+                <td className="border border-black p-1 text-center font-bold">{data.weavingRows[0].greyConstruction}</td>
                 <td className="border border-black p-1 text-center">{data.weavingRows[0].weave}</td>
                 <td className="border border-black p-1 text-center">{data.weavingRows[0].weftRatio}</td>
                 <td className="border border-black p-1 text-center">{data.weavingRows[0].reedSpace}</td>
@@ -178,7 +178,7 @@ export const PlanningSheetPreview = ({ data }) => {
           <tbody>
             <tr>
               <td className="border border-black p-1.5 font-bold w-1/4">Finish Construction</td>
-              <td className="border border-black p-1.5">{data.weavingRows?.[0]?.finishConstruction || ''}</td>
+              <td className="border border-black p-1.5 font-bold">{data.weavingRows?.[0]?.finishConstruction || ''}</td>
             </tr>
           </tbody>
         </table>
@@ -189,12 +189,11 @@ export const PlanningSheetPreview = ({ data }) => {
         <div className="text-sm p-1.5 border border-black min-h-[35px]">{data.remarks}</div>
       </div>
 
-      <div className="grid grid-cols-6 gap-2 text-center text-xs mt-20 pt-4">
+      <div className="grid grid-cols-5 gap-2 text-center text-xs mt-20 pt-4">
         <div className="border-t border-black pt-1.5 font-bold">Prepared By</div>
-        <div className="border-t border-black pt-1.5 font-bold">Checked By</div>
+        <div className="border-t border-black pt-1.5 font-bold">PPC</div>
         <div className="border-t border-black pt-1.5 font-bold">AGM Weaving</div>
         <div className="border-t border-black pt-1.5 font-bold">AGM Dyeing</div>
-        <div className="border-t border-black pt-1.5 font-bold">QA Head</div>
         <div className="border-t border-black pt-1.5 font-bold">GM Plant</div>
       </div>
 
