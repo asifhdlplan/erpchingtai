@@ -60,6 +60,7 @@ create table if not exists erp_planning_sheets (
   remain1 text,
   "todayTaken" text,
   remain2 text,
+  "piRecDate" text,
   "warpingRows" jsonb default '[]'::jsonb,
   sizing jsonb default '{}'::jsonb,
   "weavingRows" jsonb default '[]'::jsonb,

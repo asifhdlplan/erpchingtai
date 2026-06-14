@@ -465,3 +465,47 @@ label, .sap-label {
   border-color: var(--border-color) !important;
 }
 
+/* ==========================================================================
+   PRINT PREVIEW DOCUMENT OVERRIDES (Ensures A4 Sheets stay white in Dark Mode)
+   ========================================================================== */
+#printable-sheet, 
+.print-only-preview {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+#printable-sheet *,
+.print-only-preview * {
+  background-color: transparent !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+/* Maintain light gray table header/row highlights in preview mode */
+#printable-sheet thead tr,
+#printable-sheet tr.bg-gray-100,
+#printable-sheet tr.bg-slate-50,
+.print-only-preview thead tr,
+.print-only-preview tr.bg-gray-100,
+.print-only-preview tr.bg-slate-50 {
+  background-color: #f3f4f6 !important;
+}
+
+#printable-sheet tr.bg-gray-50\/60,
+.print-only-preview tr.bg-gray-50\/60 {
+  background-color: rgba(243, 244, 246, 0.6) !important;
+}
+
+#printable-sheet td.bg-yellow-50\/30,
+#printable-sheet td.bg-yellow-50\/50,
+.print-only-preview td.bg-yellow-50\/30,
+.print-only-preview td.bg-yellow-50\/50 {
+  background-color: #fef9c3 !important;
+}
+
+#printable-sheet span.bg-red-50,
+.print-only-preview span.bg-red-50 {
+  background-color: #fef2f2 !important;
+}
+
+

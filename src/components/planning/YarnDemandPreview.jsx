@@ -8,7 +8,7 @@ export const YarnDemandPreview = ({ data }) => {
   const totalQtyTon = (data.items || []).reduce((sum, item) => sum + (parseFloat(item.demandQtyTon) || 0), 0);
 
   return (
-    <div className="print-only bg-white text-black p-6 w-[297mm] min-h-[210mm] mx-auto border shadow-lg font-sans text-xs" id="printable-sheet">
+    <div className="bg-white text-black p-6 w-[297mm] min-h-[210mm] mx-auto border shadow-lg font-sans text-xs" id="printable-sheet">
       {/* Header Section */}
       <table className="w-full border-collapse border border-slate-400 mb-4 text-[11px]">
         <tbody>

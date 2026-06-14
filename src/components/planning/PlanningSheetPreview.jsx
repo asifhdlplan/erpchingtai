@@ -9,7 +9,7 @@ export const PlanningSheetPreview = ({ data }) => {
   const weavingTotalQtyKg = (data.weavingRows || []).reduce((sum, row) => sum + (parseFloat(row.qtyKg) || 0), 0);
 
   return (
-    <div className="print-only bg-white text-black p-5 w-[210mm] min-h-[297mm] mx-auto border shadow-lg" id="printable-sheet">
+    <div className="bg-white text-black p-5 w-[210mm] min-h-[297mm] mx-auto border shadow-lg" id="printable-sheet">
       <div className="text-center border-b-2 border-black pb-3 mb-4">
         <h1 className="text-2xl font-black uppercase">Ha-Meem Ching Tai Pocketing & Accessories Ltd.</h1>
         <p className="text-xs font-semibold uppercase mt-1">Polash, Narshingdi</p>
