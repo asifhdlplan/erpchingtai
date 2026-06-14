@@ -157,3 +157,23 @@ alter table erp_yarn_receipts enable row level security;
 -- Create policy for erp_yarn_receipts
 create policy "Allow all actions for anon on erp_yarn_receipts" on erp_yarn_receipts
   for all to anon using (true) with check (true);
+
+-- 8. Create erp_production_entries table
+create table if not exists erp_production_entries (
+  id text primary key,
+  "setNo" bigint not null,
+  date text not null,
+  "loomNo" text not null,
+  shift text not null check (shift in ('A shift', 'B shift', 'C shift')),
+  "loomOperator" text not null,
+  "shiftIncharge" text not null,
+  "productionQty" numeric not null,
+  "createdAt" timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS on erp_production_entries
+alter table erp_production_entries enable row level security;
+
+-- Create policy for erp_production_entries
+create policy "Allow all actions for anon on erp_production_entries" on erp_production_entries
+  for all to anon using (true) with check (true);

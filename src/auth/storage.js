@@ -17,15 +17,9 @@ const safeParse = (value, fallback) => {
 export const authStorage = {
   async ensureDefaults() {
     try {
-      const { data, error } = await supabase
+      await supabase
         .from('erp_settings')
-        .select('value')
-        .eq('key', 'admin_password')
-        .maybeSingle();
-
-      if (!data && !error) {
-        await supabase.from('erp_settings').insert({ key: 'admin_password', value: DEFAULT_ADMIN_PASSWORD });
-      }
+        .upsert({ key: 'admin_password', value: DEFAULT_ADMIN_PASSWORD });
     } catch (e) {
       console.error('Failed to ensure default settings:', e);
     }

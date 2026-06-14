@@ -25,6 +25,15 @@ export const PageLayout = ({
     return localStorage.getItem('theme') || 'light';
   });
 
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -38,6 +47,9 @@ export const PageLayout = ({
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
+
+  const formattedTime = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+  const formattedDate = time.toLocaleDateString([], { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
 
 
 
@@ -53,6 +65,10 @@ export const PageLayout = ({
         return { code: 'CO01', title: 'Create Production Sizing Plan' };
       case 'all_planning':
         return { code: 'COOIS', title: 'Production Plan Archive' };
+      case 'production_entry':
+        return { code: 'ZPROD_ENT', title: 'Daily Production Entry' };
+      case 'set_wise_production':
+        return { code: 'ZPROD_RPT', title: 'Set-Wise Production Report' };
       case 'admin_dashboard':
         return { code: 'SU01', title: 'User Maintenance & Access' };
       case 'activity_overview':
@@ -115,6 +131,19 @@ export const PageLayout = ({
 
         {/* Right Section: System Actions & Profile */}
         <div className="flex items-center gap-4 text-xs font-medium">
+          {/* Live Date and Time Badge */}
+          <div className="hidden sm:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/30 px-3 py-1.5 rounded-full text-slate-600 dark:text-slate-355 shadow-inner select-none font-mono text-[11px] hover:border-blue-450/40 dark:hover:border-blue-500/20 transition-all duration-200">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="font-semibold text-slate-500 dark:text-slate-400">{formattedDate}</span>
+              <span className="text-slate-300 dark:text-slate-700 font-normal">|</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400 animate-pulse">{formattedTime}</span>
+            </span>
+          </div>
+
           {/* Theme Toggle Button */}
           <button 
             onClick={toggleTheme}
@@ -273,6 +302,18 @@ export const PageLayout = ({
                             className={`sap-tree-item ${currentPage === 'all_planning' ? 'active' : ''}`}
                           >
                             Sizing Plan Archive
+                          </div>
+                          <div 
+                            onClick={() => onNavigate('production_entry')}
+                            className={`sap-tree-item ${currentPage === 'production_entry' ? 'active' : ''}`}
+                          >
+                            Daily Production Entry
+                          </div>
+                          <div 
+                            onClick={() => onNavigate('set_wise_production')}
+                            className={`sap-tree-item ${currentPage === 'set_wise_production' ? 'active' : ''}`}
+                          >
+                            Set-Wise Production Report
                           </div>
                         </div>
                       )}

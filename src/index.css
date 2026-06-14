@@ -5,46 +5,47 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Light Theme variables (Office Slate & Blue) */
-  --bg-app: #F8FAFC;
+  /* Light Theme variables (Executive Midnight Emerald & Gold Accent) */
+  --bg-app: #F2F5F4;
   --bg-surface: #FFFFFF;
-  --bg-sidebar: #0F172A;
-  --bg-sidebar-hover: #1E293B;
-  --bg-sidebar-active: #2563EB;
-  --border-color: #E2E8F0;
-  --text-primary: #0F172A;
-  --text-secondary: #64748B;
-  --primary-color: #2563EB;
-  --primary-hover: #1D4ED8;
-  --primary-light: #EFF6FF;
-  --accent-color: #6366F1;
-  --table-header-bg: #F1F5F9;
-  --table-hover-bg: #F8FAFC;
+  --bg-sidebar: #061C1C;
+  --bg-sidebar-hover: #0E2F2F;
+  --bg-sidebar-active: #0D7676;
+  --border-color: #CBD5E1;
+  --text-primary: #0D1F1F;
+  --text-secondary: #475569;
+  --primary-color: #0D7676;
+  --primary-hover: #0A5E5E;
+  --primary-light: #ECFDF5;
+  --accent-color: #D97706;
+  --table-header-bg: #E6ECEB;
+  --table-hover-bg: #F2F5F4;
   --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --modal-overlay: rgba(15, 23, 42, 0.4);
+  --modal-overlay: rgba(6, 28, 28, 0.4);
   --input-bg: #FFFFFF;
 }
 
 html.dark {
-  /* Dark Theme variables (Modern Charcoal & Cobalt) */
-  --bg-app: #0B0F19;
-  --bg-surface: #151D30;
-  --bg-sidebar: #090C16;
-  --bg-sidebar-hover: #151D30;
-  --bg-sidebar-active: #3B82F6;
-  --border-color: #242E42;
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --primary-color: #3B82F6;
-  --primary-hover: #2563EB;
-  --primary-light: #172554;
-  --accent-color: #818CF8;
-  --table-header-bg: #1E293B;
-  --table-hover-bg: #1B2438;
+  /* Dark Theme variables (Obsidian Emerald & Gold Accent) */
+  --bg-app: #050A0A;
+  --bg-surface: #0F1C1C;
+  --bg-sidebar: #040909;
+  --bg-sidebar-hover: #0D1C1C;
+  --bg-sidebar-active: #14B8A6;
+  --border-color: #1E2E2E;
+  --text-primary: #E2ECEB;
+  --text-secondary: #6E8B89;
+  --primary-color: #14B8A6;
+  --primary-hover: #0D9488;
+  --primary-light: #042F2E;
+  --accent-color: #F59E0B;
+  --table-header-bg: #122424;
+  --table-hover-bg: #0E1B1B;
   --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.2), 0 2px 4px -2px rgb(0 0 0 / 0.2);
   --modal-overlay: rgba(0, 0, 0, 0.6);
-  --input-bg: #1A2338;
+  --input-bg: #102121;
 }
+
 
 @layer base {
   body {
@@ -93,7 +94,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   outline: none !important;
   border-color: var(--primary-color) !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15) !important;
 }
 input:disabled, select:disabled, textarea:disabled, [readonly] {
   background-color: var(--bg-app) !important;
@@ -244,14 +245,14 @@ label, .sap-label {
   padding: 8px 12px;
   font-size: 13px;
   cursor: pointer;
-  color: #94A3B8 !important; /* Static light slate on dark sidebar */
+  color: #8FA5A3 !important; /* Static light pine-slate on dark sidebar */
   border-radius: 6px;
   margin: 2px 0;
   transition: all 0.15s ease;
   font-family: inherit !important;
 }
 .sap-tree-item:hover {
-  background-color: #1E293B !important; /* Static slate-800 hover background */
+  background-color: var(--bg-sidebar-hover) !important; /* Forest-teal hover background */
   color: #FFFFFF !important; /* Crisp white text on hover */
 }
 .sap-tree-item.active {
@@ -337,5 +338,130 @@ label, .sap-label {
   div.flex.items-center:has(> label) > .flex-1 {
     width: 100% !important;
   }
+}
+
+/* ==========================================================================
+   GLOBAL THEME OVERRIDES (Professional Midnight Emerald / Pine Teal & Gold)
+   ========================================================================== */
+
+/* Overriding Tailwind text-blue and text-blue-hover classes */
+.text-blue-600,
+.text-blue-500,
+.text-blue-450 {
+  color: var(--primary-color) !important;
+}
+.dark .dark\:text-blue-400,
+.dark .text-blue-400,
+.dark .text-blue-500 {
+  color: var(--primary-color) !important;
+}
+.hover\:text-blue-600:hover,
+.hover\:text-blue-700:hover,
+.hover\:text-blue-550:hover,
+.hover\:text-blue-500:hover {
+  color: var(--primary-hover) !important;
+}
+.dark .dark\:hover\:text-blue-300:hover,
+.dark .hover\:text-blue-300:hover {
+  color: var(--primary-hover) !important;
+}
+
+/* Overriding Tailwind bg-blue and bg-blue-hover classes */
+.bg-blue-600,
+.bg-blue-500,
+.bg-blue-750,
+.bg-blue-700,
+.bg-blue-800 {
+  background-color: var(--primary-color) !important;
+}
+.dark .dark\:bg-blue-400,
+.dark .bg-blue-600,
+.dark .bg-blue-500,
+.dark .bg-blue-700 {
+  background-color: var(--primary-color) !important;
+}
+.bg-blue-50,
+.hover\:bg-blue-50:hover {
+  background-color: var(--primary-light) !important;
+}
+.hover\:bg-blue-700:hover,
+.hover\:bg-blue-800:hover,
+.hover\:bg-blue-600:hover {
+  background-color: var(--primary-hover) !important;
+}
+.active\:bg-blue-800:active {
+  background-color: var(--primary-hover) !important;
+}
+.dark .dark\:hover\:bg-blue-955\/20:hover,
+.dark .dark\:hover\:bg-blue-950\/20:hover {
+  background-color: rgba(20, 184, 166, 0.1) !important;
+}
+.hover\:bg-blue-50:hover, 
+.hover\:bg-blue-50\/50:hover {
+  background-color: var(--primary-light) !important;
+}
+
+/* Overriding Tailwind borders */
+.border-blue-200,
+.border-blue-300,
+.border-blue-600,
+.border-blue-500 {
+  border-color: var(--border-color) !important;
+}
+.dark .dark\:border-blue-900\/40,
+.dark .border-blue-900\/40 {
+  border-color: var(--border-color) !important;
+}
+
+/* Checkbox ring overrides */
+.focus\:ring-blue-500:focus,
+.focus\:ring-blue-600:focus {
+  --tw-ring-color: var(--primary-color) !important;
+}
+
+/* Override standard slate backgrounds for true ERP theme consistency */
+.bg-slate-50,
+.bg-slate-100 {
+  background-color: var(--bg-app) !important;
+}
+.dark .dark\:bg-\[\#0B0F19\],
+.dark .bg-\[\#0B0F19\] {
+  background-color: var(--bg-app) !important;
+}
+
+.bg-white {
+  background-color: var(--bg-surface) !important;
+}
+.dark .dark\:bg-\[\#151D30\],
+.dark .bg-\[\#151D30\] {
+  background-color: var(--bg-surface) !important;
+}
+
+/* Sidebar background overrides */
+.bg-slate-900 {
+  background-color: var(--bg-sidebar) !important;
+}
+.bg-slate-950\/40 {
+  background-color: rgba(5, 10, 10, 0.45) !important;
+}
+.bg-slate-950\/20 {
+  background-color: rgba(5, 10, 10, 0.25) !important;
+}
+
+/* Sidebar hover and active styles */
+.hover\:bg-slate-800:hover,
+.hover\:bg-slate-800\/50:hover {
+  background-color: var(--bg-sidebar-hover) !important;
+}
+
+/* Border overrides */
+.border-slate-200,
+.border-slate-100 {
+  border-color: var(--border-color) !important;
+}
+.dark .dark\:border-slate-800,
+.dark .border-slate-800,
+.dark .border-slate-850 {
+  border-color: var(--border-color) !important;
 }
 

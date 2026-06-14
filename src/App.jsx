@@ -18,6 +18,8 @@ import YarnStockEntry from './pages/YarnStockEntry';
 import YarnDemandCreation from './pages/YarnDemandCreation';
 import AllYarnDemands from './pages/AllYarnDemands';
 import AllYarnList from './pages/AllYarnList';
+import ProductionEntry from './pages/ProductionEntry';
+import SetWiseProduction from './pages/SetWiseProduction';
 
 const ERPApp = () => {
   const [currentPage, setCurrentPage] = useState('sap_easy_access');
@@ -194,6 +196,26 @@ const ERPApp = () => {
               setEditingDemand(demand);
               handleNavigate('yarn_demand_creation', true);
             }}
+            status={status}
+            setStatus={setStatus}
+          />
+        );
+      case 'production_entry':
+        return (
+          <ProductionEntry
+            currentPage={currentPage}
+            onNavigate={handleNavigate}
+            onAdminClick={() => setShowAdminPanel(true)}
+            status={status}
+            setStatus={setStatus}
+          />
+        );
+      case 'set_wise_production':
+        return (
+          <SetWiseProduction
+            currentPage={currentPage}
+            onNavigate={handleNavigate}
+            onAdminClick={() => setShowAdminPanel(true)}
             status={status}
             setStatus={setStatus}
           />

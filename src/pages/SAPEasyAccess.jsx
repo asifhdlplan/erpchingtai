@@ -4,40 +4,52 @@ import { PageLayout } from '../components/layout/PageLayout';
 const SAPEasyAccess = ({ currentPage, onNavigate, onAdminClick, status, setStatus }) => {
   const quickActions = [
     {
-      code: 'VA01',
-      title: 'Order Receive',
-      desc: 'Register incoming purchase orders',
-      page: 'order_receive',
+      code: 'VA05',
+      title: 'Active Orders',
+      desc: 'View and manage active sales orders',
+      page: 'active_orders',
+      icon: (
+        <svg className="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+      ),
+      bg: 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30'
+    },
+    {
+      code: 'VA05_COMP',
+      title: 'Completed Orders',
+      desc: 'Browse completed orders history',
+      page: 'completed_orders',
       icon: (
         <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
       bg: 'bg-blue-50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900/30'
     },
     {
-      code: 'CO01',
-      title: 'Create Sizing Plan',
-      desc: 'Generate warp sizing programming layouts',
-      page: 'planning_creation',
+      code: 'COOIS',
+      title: 'All Planning Sheets',
+      desc: 'Sizing Plan Archive and specifications search',
+      page: 'all_planning',
       icon: (
         <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
         </svg>
       ),
       bg: 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/30'
     },
     {
-      code: 'MIGO',
-      title: 'Yarn Stock Entry',
-      desc: 'Post goods receipt to yarn warehouse ledger',
-      page: 'yarn_stock_entry',
+      code: 'ZPROD_RPT',
+      title: 'Set-Wise Production Report',
+      desc: 'View aggregated yields and management report',
+      page: 'set_wise_production',
       icon: (
-        <svg className="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m-9 1V4a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+        <svg className="w-6 h-6 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       ),
-      bg: 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30'
+      bg: 'bg-teal-50 dark:bg-teal-955/20 border-teal-100 dark:border-teal-900/30'
     },
     {
       code: 'MMBE',
@@ -50,6 +62,30 @@ const SAPEasyAccess = ({ currentPage, onNavigate, onAdminClick, status, setStatu
         </svg>
       ),
       bg: 'bg-cyan-50 dark:bg-cyan-950/20 border-cyan-100 dark:border-cyan-900/30'
+    },
+    {
+      code: 'ZRECEIPTS',
+      title: 'All Yarn List',
+      desc: 'Historical log of all yarn goods receipts',
+      page: 'all_yarn_list',
+      icon: (
+        <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      ),
+      bg: 'bg-amber-50 dark:bg-amber-955/20 border-amber-100 dark:border-amber-900/30'
+    },
+    {
+      code: 'ZDEM_LIST',
+      title: 'All Yarn Demands',
+      desc: 'Browse all generated yarn demand slips',
+      page: 'all_yarn_demands',
+      icon: (
+        <svg className="w-6 h-6 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      bg: 'bg-rose-50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/30'
     }
   ];
 

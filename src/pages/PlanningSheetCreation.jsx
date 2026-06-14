@@ -162,6 +162,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
     remain1: '',
     todayTaken: '',
     remain2: '',
+    piRecDate: '',
   });
 
   const [warpingRows, setWarpingRows] = useState([{}]);
@@ -201,6 +202,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
         remain1: editingPlan.remain1 || '',
         todayTaken: editingPlan.todayTaken || '',
         remain2: editingPlan.remain2 || '',
+        piRecDate: editingPlan.piRecDate || '',
         id: editingPlan.id
       });
       setWarpingRows(editingPlan.warpingRows || [{}]);
@@ -234,7 +236,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
           buyer: '', styleCode: '', endBuyer: '', mktPerson: '', remarks: '',
           setLength: '', orderRef: '', piWidth: '', piShrink: '', weave: '',
           colour: '', orderQnty: '', reqProd: '', pDyeing: '', remain1: '',
-          todayTaken: '', remain2: '', id: undefined
+          todayTaken: '', remain2: '', piRecDate: '', id: undefined
         }));
       };
       fetchSetNo();
@@ -255,11 +257,12 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
 
   const handleOrderSelect = (order) => {
     const firstItem = order.items?.[0] || {};
+    const uniqueStyles = [...new Set(order.items?.map(item => item.styleNo))].filter(Boolean).join(', ');
     setSelectedOrder(order);
     setFormData(prev => ({
       ...prev,
       buyer: order.buyer || '',
-      styleCode: firstItem.styleNo || order.styleCode || '',
+      styleCode: uniqueStyles || order.styleCode || '',
       endBuyer: order.customer || '',
       mktPerson: order.mktPerson || '',
       orderRef: order.orderRef || '',
@@ -267,6 +270,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
       piShrink: firstItem.piShrink || order.piShrink || '',
       weave: firstItem.weav || order.weave || '',
       orderQnty: firstItem.qnty || order.qnty || '',
+      piRecDate: order.piRecDate || '',
     }));
     if (setStatus) setStatus({ text: `Linked Order Ref ${order.orderRef} to Plan`, type: 'S' });
   };
@@ -572,7 +576,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
       buyer: '', styleCode: '', endBuyer: '', mktPerson: '', remarks: '',
       setLength: '', orderRef: '', piWidth: '', piShrink: '', weave: '',
       colour: '', orderQnty: '', reqProd: '', pDyeing: '', remain1: '',
-      todayTaken: '', remain2: '', setNo: prev.setNo
+      todayTaken: '', remain2: '', piRecDate: '', setNo: prev.setNo
     }));
     if (setEditingPlan) setEditingPlan(null);
     if (setStatus) setStatus({ text: 'Plan form reset.', type: 'W' });
@@ -701,6 +705,10 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
                     <div className="flex items-center">
                       <label className="w-28 sap-label">Order Ref</label>
                       <input type="text" value={formData.orderRef} onChange={e => setFormData({...formData, orderRef: e.target.value})} className="sap-required" />
+                    </div>
+                    <div className="flex items-center">
+                      <label className="w-28 sap-label">PI Rcv Date</label>
+                      <input type="date" value={formData.piRecDate || ''} onChange={e => setFormData({...formData, piRecDate: e.target.value})} />
                     </div>
                     <div className="flex items-center">
                       <label className="w-28 sap-label">Set Length (m) <span className="text-red-600">*</span></label>

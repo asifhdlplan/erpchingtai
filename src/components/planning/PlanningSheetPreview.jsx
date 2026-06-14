@@ -28,18 +28,20 @@ export const PlanningSheetPreview = ({ data }) => {
         
         <div className="font-bold whitespace-nowrap">Set Length: <span className="font-bold text-base underline ml-1">{data.setLength}</span></div>
         <div className="font-bold">Order Ref: <span className="font-normal">{data.orderRef}</span></div>
+        <div className="font-bold">PI Rcv Date: <span className="font-normal">{data.piRecDate || '-'}</span></div>
         <div className="font-bold">PI Width: <span className="font-normal">{data.piWidth}</span></div>
-        <div className="font-bold">PI Shrink: <span className="font-normal">{data.piShrink}</span></div>
         
+        <div className="font-bold">PI Shrink: <span className="font-normal">{data.piShrink}</span></div>
         <div className="font-bold">Weave: <span className="font-normal">{data.weave}</span></div>
         <div className="font-bold">Colour: <span className="font-normal">{data.colour}</span></div>
         <div className="font-bold">Order Qnty: <span className="font-normal">{data.orderQnty}</span></div>
-        <div className="font-bold">Req Prod(m): <span className="font-normal">{data.reqProd}</span></div>
         
+        <div className="font-bold">Req Prod(m): <span className="font-normal">{data.reqProd}</span></div>
         <div className="font-bold">P. Dyeing: <span className="font-normal">{data.pDyeing}</span></div>
         <div className="font-bold">Remain: <span className="font-normal">{data.remain1}</span></div>
         <div className="font-bold">Today Taken: <span className="font-normal">{data.todayTaken}</span></div>
-        <div className="font-bold">Remain: <span className="font-normal">{data.remain2}</span></div>
+        
+        <div className="font-bold col-span-4">Remain: <span className="font-normal">{data.remain2}</span></div>
       </div>
 
       <div className="mb-4">
