@@ -4,30 +4,31 @@ import { authStorage } from '../../auth/storage';
 import { createUser, deleteUser, resetUserPassword, updateUser } from '../../auth/utils';
 
 const UserManagementTable = ({ users, onEdit, onDelete, onReset, selectedRowId, setSelectedRowId }) => (
-  <div className="overflow-auto border border-[#B8C2CC] bg-white">
-    <table className="sap-alv-table border-collapse">
+  <div className="overflow-auto border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151D30] rounded-lg">
+    <table className="sap-alv-table border-collapse w-full text-xs">
       <thead>
-        <tr className="bg-[#E8EDF5] border-b border-[#B8C2CC]">
-          <th className="w-8 text-center border-r border-[#B8C2CC]">Sel</th>
-          <th className="border-r border-[#B8C2CC]">Employee Name</th>
-          <th className="border-r border-[#B8C2CC]">Username</th>
-          <th className="border-r border-[#B8C2CC]">Created Date</th>
+        <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-800">
+          <th className="w-8 text-center border-r border-slate-200 dark:border-slate-800">Sel</th>
+          <th className="border-r border-slate-200 dark:border-slate-800">Employee Name</th>
+          <th className="border-r border-slate-200 dark:border-slate-800">Username</th>
+          <th className="border-r border-slate-200 dark:border-slate-800">Password</th>
+          <th className="border-r border-slate-200 dark:border-slate-800">Created Date</th>
           <th className="text-center w-52">Actions</th>
         </tr>
       </thead>
       <tbody>
         {users.length === 0 ? (
           <tr>
-            <td colSpan="5" className="p-4 text-center text-slate-400 italic">No users found.</td>
+            <td colSpan="6" className="p-4 text-center text-slate-400 dark:text-slate-500 italic">No users found.</td>
           </tr>
         ) : (
           users.map((u) => (
             <tr 
               key={u.username} 
               onClick={() => setSelectedRowId(u.username)}
-              className={`cursor-pointer ${selectedRowId === u.username ? 'sap-selected' : ''}`}
+              className={`cursor-pointer ${selectedRowId === u.username ? 'sap-selected' : ''} hover:bg-slate-50 dark:hover:bg-slate-850`}
             >
-              <td className="text-center border-r border-[#B8C2CC]">
+              <td className="text-center border-r border-slate-200 dark:border-slate-800 p-2">
                 <input 
                   type="radio" 
                   name="user_select"
@@ -35,26 +36,27 @@ const UserManagementTable = ({ users, onEdit, onDelete, onReset, selectedRowId, 
                   onChange={() => setSelectedRowId(u.username)}
                 />
               </td>
-              <td className="font-bold text-slate-900 border-r border-[#B8C2CC]">{u.employeeName}</td>
-              <td className="font-mono text-slate-700 border-r border-[#B8C2CC]">{u.username}</td>
-              <td className="text-slate-500 border-r border-[#B8C2CC] font-mono">{new Date(u.createdAt).toLocaleString()}</td>
-              <td className="p-0 text-center">
-                <div className="flex items-center justify-center h-[22px]">
+              <td className="font-bold text-slate-800 dark:text-slate-200 border-r border-slate-200 dark:border-slate-800 p-2">{u.employeeName}</td>
+              <td className="font-mono text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800 p-2">{u.username}</td>
+              <td className="font-mono text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800 p-2">{u.password}</td>
+              <td className="text-slate-500 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800 font-mono p-2">{new Date(u.createdAt).toLocaleString()}</td>
+              <td className="p-1 text-center">
+                <div className="flex items-center justify-center gap-1">
                   <button 
                     onClick={(e) => { e.stopPropagation(); onEdit(u); }} 
-                    className="text-blue-700 hover:bg-blue-50 px-2 py-0.5 text-[10px] font-bold border-r border-[#E5E7EB] h-full"
+                    className="px-2.5 py-1 text-xs font-bold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 rounded transition"
                   >
                     Edit
                   </button>
                   <button 
                     onClick={(e) => { e.stopPropagation(); onReset(u); }} 
-                    className="text-amber-700 hover:bg-amber-50 px-2 py-0.5 text-[10px] font-bold border-r border-[#E5E7EB] h-full"
+                    className="px-2.5 py-1 text-xs font-bold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded transition"
                   >
                     PW Reset
                   </button>
                   <button 
                     onClick={(e) => { e.stopPropagation(); onDelete(u); }} 
-                    className="text-red-600 hover:bg-red-50 px-2 py-0.5 text-[10px] font-bold h-full"
+                    className="px-2.5 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 rounded transition"
                   >
                     Delete
                   </button>
@@ -150,8 +152,8 @@ const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStat
       setStatus={setStatus}
     >
       {/* Transaction Action Toolbar */}
-      <div className="bg-[#E8EDF5] border-b border-[#B8C2CC] px-2 py-1 flex items-center justify-between select-none">
-        <div className="flex gap-1">
+      <div className="bg-slate-100 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 select-none transition-colors">
+        <div className="flex flex-wrap gap-2">
           <button 
             onClick={() => {
               const target = users.find(u => u.username === selectedRowId);
@@ -187,33 +189,33 @@ const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStat
           </button>
           <button onClick={fetchUsers} className="sap-btn">↻ Refresh</button>
         </div>
-        <div className="text-[10px] font-mono font-bold text-slate-500 uppercase">
+        <div className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
           SU01 - User Maintenance
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50 dark:bg-[#0B0F19] transition-colors flex flex-col">
         {/* Header stats block */}
-        <section className="border border-[#B8C2CC] bg-white p-4">
-          <div className="flex justify-between items-center">
+        <section className="office-card p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">System Security Parameters</h2>
-              <span className="text-[10px] text-slate-400 font-mono">Active login records: {userCount}</span>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">System Security Parameters</h2>
+              <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">Active login records: {userCount}</span>
             </div>
             <button 
               onClick={() => onNavigate('sap_easy_access')}
-              className="sap-btn bg-[#D9E2F3] hover:bg-[#C6D9F1] font-bold text-xs"
+              className="sap-btn sap-btn-secondary text-xs"
             >
               ⬅ Exit to Easy Access
             </button>
           </div>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow">
+          <div className="lg:col-span-2 space-y-6 flex flex-col">
             {/* Manage Users section */}
-            <section className="border border-[#B8C2CC] bg-white p-4">
-              <div className="border-b border-[#B8C2CC] pb-1.5 mb-3 font-bold text-xs uppercase text-slate-700">
+            <section className="office-card p-4 flex-grow flex flex-col">
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 font-bold text-xs uppercase text-slate-500">
                 Registered Logins ALV Matrix
               </div>
               <UserManagementTable
@@ -228,18 +230,18 @@ const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStat
             
             {/* Edit User target panel */}
             {editTarget && (
-              <section className="border border-[#B8C2CC] bg-white p-4 animate-in slide-in-from-top-4 duration-200">
-                <div className="border-b border-[#B8C2CC] pb-1.5 mb-3 font-bold text-xs uppercase text-slate-700">
+              <section className="office-card p-4 animate-in slide-in-from-top-4 duration-200">
+                <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 font-bold text-xs uppercase text-slate-500">
                   Edit User Details
                 </div>
-                <form onSubmit={saveEdit} className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
-                  <div className="flex items-center">
-                    <label className="w-24 sap-label">Emp Name</label>
-                    <input className="flex-1 sap-required" value={editTarget.employeeName} onChange={(e)=>setEditTarget({...editTarget, employeeName:e.target.value})}/>
+                <form onSubmit={saveEdit} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                  <div className="flex flex-col">
+                    <label className="sap-label mb-1">Emp Name</label>
+                    <input className="w-full sap-required" value={editTarget.employeeName} onChange={(e)=>setEditTarget({...editTarget, employeeName:e.target.value})}/>
                   </div>
-                  <div className="flex items-center">
-                    <label className="w-24 sap-label">Username</label>
-                    <input className="flex-1 sap-required font-mono" value={editTarget.username} onChange={(e)=>setEditTarget({...editTarget, username:e.target.value})}/>
+                  <div className="flex flex-col">
+                    <label className="sap-label mb-1">Username</label>
+                    <input className="w-full sap-required font-mono" value={editTarget.username} onChange={(e)=>setEditTarget({...editTarget, username:e.target.value})}/>
                   </div>
                   <button className="sap-btn w-full">Confirm Modify</button>
                 </form>
@@ -247,46 +249,46 @@ const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStat
             )}
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Create User Section */}
-            <section className="border border-[#B8C2CC] bg-white p-4">
-              <div className="border-b border-[#B8C2CC] pb-1.5 mb-3 font-bold text-xs uppercase text-slate-700">
+            <section className="office-card p-4">
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 font-bold text-xs uppercase text-slate-500">
                 New User Registration
               </div>
-              <form onSubmit={addUser} className="space-y-3">
-                <div className="flex items-center">
-                  <label className="w-28 sap-label">Employee Name</label>
-                  <input className="flex-1 sap-required" placeholder="e.g. John Doe" value={form.employeeName} onChange={(e)=>setForm({...form, employeeName:e.target.value})}/>
+              <form onSubmit={addUser} className="space-y-4">
+                <div className="flex flex-col">
+                  <label className="sap-label mb-1">Employee Name</label>
+                  <input className="w-full sap-required" placeholder="e.g. John Doe" value={form.employeeName} onChange={(e)=>setForm({...form, employeeName:e.target.value})}/>
                 </div>
-                <div className="flex items-center">
-                  <label className="w-28 sap-label">Username</label>
-                  <input className="flex-1 sap-required font-mono" placeholder="e.g. johndoe" value={form.username} onChange={(e)=>setForm({...form, username:e.target.value})}/>
+                <div className="flex flex-col">
+                  <label className="sap-label mb-1">Username</label>
+                  <input className="w-full sap-required font-mono" placeholder="e.g. johndoe" value={form.username} onChange={(e)=>setForm({...form, username:e.target.value})}/>
                 </div>
-                <div className="flex items-center">
-                  <label className="w-28 sap-label">Initial Password</label>
-                  <input type="password" autoComplete="new-password" className="flex-1 sap-required" placeholder="••••••••" value={form.password} onChange={(e)=>setForm({...form, password:e.target.value})}/>
+                <div className="flex flex-col">
+                  <label className="sap-label mb-1">Initial Password</label>
+                  <input type="password" autoComplete="new-password" className="w-full sap-required" placeholder="••••••••" value={form.password} onChange={(e)=>setForm({...form, password:e.target.value})}/>
                 </div>
                 <button className="sap-btn w-full mt-2">Create Profile</button>
               </form>
             </section>
 
             {/* Change Admin Password */}
-            <section className="border border-[#B8C2CC] bg-white p-4">
-              <div className="border-b border-[#B8C2CC] pb-1.5 mb-3 font-bold text-xs uppercase text-slate-700">
+            <section className="office-card p-4">
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 font-bold text-xs uppercase text-slate-500">
                 Change Admin Bypass
               </div>
-              <form onSubmit={changeAdminPassword} className="space-y-3" autoComplete="off">
-                <div className="flex items-center">
-                  <label className="w-28 sap-label">Old Password</label>
-                  <input type="password" autoComplete="new-password" className="flex-1 sap-required" placeholder="••••••••" value={adminPwd.oldPassword} onChange={(e)=>setAdminPwd({...adminPwd, oldPassword:e.target.value})}/>
+              <form onSubmit={changeAdminPassword} className="space-y-4" autoComplete="off">
+                <div className="flex flex-col">
+                  <label className="sap-label mb-1">Old Password</label>
+                  <input type="password" autoComplete="new-password" className="w-full sap-required" placeholder="••••••••" value={adminPwd.oldPassword} onChange={(e)=>setAdminPwd({...adminPwd, oldPassword:e.target.value})}/>
                 </div>
-                <div className="flex items-center">
-                  <label className="w-28 sap-label">New Password</label>
-                  <input type="password" autoComplete="new-password" className="flex-1 sap-required" placeholder="••••••••" value={adminPwd.newPassword} onChange={(e)=>setAdminPwd({...adminPwd, newPassword:e.target.value})}/>
+                <div className="flex flex-col">
+                  <label className="sap-label mb-1">New Password</label>
+                  <input type="password" autoComplete="new-password" className="w-full sap-required" placeholder="••••••••" value={adminPwd.newPassword} onChange={(e)=>setAdminPwd({...adminPwd, newPassword:e.target.value})}/>
                 </div>
-                <div className="flex items-center">
-                  <label className="w-28 sap-label">Confirm Pass</label>
-                  <input type="password" autoComplete="new-password" className="flex-1 sap-required" placeholder="••••••••" value={adminPwd.confirmPassword} onChange={(e)=>setAdminPwd({...adminPwd, confirmPassword:e.target.value})}/>
+                <div className="flex flex-col">
+                  <label className="sap-label mb-1">Confirm Pass</label>
+                  <input type="password" autoComplete="new-password" className="w-full sap-required" placeholder="••••••••" value={adminPwd.confirmPassword} onChange={(e)=>setAdminPwd({...adminPwd, confirmPassword:e.target.value})}/>
                 </div>
                 <button className="sap-btn w-full mt-2">Update Bypass</button>
               </form>
