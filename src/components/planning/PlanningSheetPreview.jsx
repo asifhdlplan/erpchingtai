@@ -1,7 +1,16 @@
-import React from 'react';
+export const formatApproverName = (name) => {
+  if (!name) return 'ADMIN';
+  const clean = String(name).trim();
+  if (clean.toLowerCase() === 'kalam') {
+    return 'Sr. GM - Plant';
+  }
+  return clean;
+};
 
 export const PlanningSheetPreview = ({ data }) => {
   if (!data) return null;
+
+  const approverDisplay = formatApproverName(data.approvedBy);
 
   // Calculate totals
   const warpingTotalEnds = (data.warpingRows || []).reduce((sum, row) => sum + (parseFloat(row.totalEnds) || 0), 0);
@@ -72,7 +81,7 @@ export const PlanningSheetPreview = ({ data }) => {
         <div className="font-bold text-right">Date: <span className="font-normal">{data.date}</span></div>
         
         <div className="font-bold whitespace-nowrap col-span-2">Style/Code: <span className="font-bold text-base underline ml-1">{data.styleCode}</span></div>
-        <div className="font-bold">Approval: <span className={`ml-1 font-mono text-xs ${data.approvalStatus === 'Approved' ? 'text-emerald-800 font-bold' : 'text-amber-700 font-bold'}`}>{data.approvalStatus === 'Approved' ? `Approved (${data.approvedBy || 'ADMIN'})` : 'Pending'}</span></div>
+        <div className="font-bold">Approval: <span className={`ml-1 font-mono text-xs ${data.approvalStatus === 'Approved' ? 'text-emerald-800 font-bold' : 'text-amber-700 font-bold'}`}>{data.approvalStatus === 'Approved' ? `Approved (${approverDisplay})` : 'Pending'}</span></div>
         <div className="font-bold">MKT Person: <span className="font-normal">{data.mktPerson}</span></div>
         
         <div className="font-bold whitespace-nowrap">Set Length: <span className="font-bold text-base underline ml-1">{data.setLength}</span></div>
@@ -250,7 +259,7 @@ export const PlanningSheetPreview = ({ data }) => {
           <div>Sr. GM Plant</div>
           {data.approvalStatus === 'Approved' ? (
             <div className="status-approved-seal text-[9px] font-mono text-emerald-800 font-bold uppercase mt-0.5">
-              ✓ Appv: {data.approvedBy || 'ADMIN'}
+              ✓ Appv: {approverDisplay}
             </div>
           ) : (
             <div 

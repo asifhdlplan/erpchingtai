@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { PageLayout } from '../components/layout/PageLayout';
 import { planningStorage } from '../services/planningStorage';
-import { PlanningSheetPreview } from '../components/planning/PlanningSheetPreview';
+import { PlanningSheetPreview, formatApproverName } from '../components/planning/PlanningSheetPreview';
 import { authStorage } from '../auth/storage';
 import { useAuth } from '../context/AuthContext';
 
@@ -19,6 +19,7 @@ export const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status
 
   const { session } = useAuth();
   const currentUser = session?.username || 'ADMIN';
+  const approverRoleName = formatApproverName(currentUser);
   const isApprover = session?.canApprovePlans || currentUser.toUpperCase() === 'ADMIN';
 
   useEffect(() => {
@@ -53,8 +54,8 @@ export const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status
 
     setActionLoading(true);
     try {
-      await planningStorage.approveSheet(sheet.id, currentUser);
-      if (setStatus) setStatus({ text: `Sizing Plan Set #${sheet.setNo} APPROVED successfully by ${currentUser}.`, type: 'S' });
+      await planningStorage.approveSheet(sheet.id, approverRoleName);
+      if (setStatus) setStatus({ text: `Sizing Plan Set #${sheet.setNo} APPROVED successfully by ${approverRoleName}.`, type: 'S' });
       alert(`Sizing Plan Set #${sheet.setNo} has been authorized & approved. Print/PDF is now unlocked.`);
       if (reviewSheet?.id === sheet.id) {
         setReviewSheet(null);
@@ -89,8 +90,8 @@ export const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status
     setActionLoading(true);
     try {
       const ids = selectedPending.map(s => s.id);
-      const approvedCount = await planningStorage.bulkApproveSheets(ids, currentUser);
-      if (setStatus) setStatus({ text: `Bulk authorized ${approvedCount} sizing plans successfully by ${currentUser}.`, type: 'S' });
+      const approvedCount = await planningStorage.bulkApproveSheets(ids, approverRoleName);
+      if (setStatus) setStatus({ text: `Bulk authorized ${approvedCount} sizing plans successfully by ${approverRoleName}.`, type: 'S' });
       alert(`Successfully authorized & bulk approved ${approvedCount} sizing plan(s)!\nPrint & PDF copies are now released.`);
       setSelectedRowIds([]);
       await loadSheets();
@@ -116,8 +117,8 @@ export const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status
     setActionLoading(true);
     try {
       const ids = allPending.map(s => s.id);
-      const approvedCount = await planningStorage.bulkApproveSheets(ids, currentUser);
-      if (setStatus) setStatus({ text: `All ${approvedCount} pending sizing plans authorized by ${currentUser}.`, type: 'S' });
+      const approvedCount = await planningStorage.bulkApproveSheets(ids, approverRoleName);
+      if (setStatus) setStatus({ text: `All ${approvedCount} pending sizing plans authorized by ${approverRoleName}.`, type: 'S' });
       alert(`Successfully authorized and approved all ${approvedCount} pending sizing plan(s)!`);
       setSelectedRowIds([]);
       await loadSheets();
@@ -175,7 +176,8 @@ export const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status
         String(sheet.styleCode || '').toLowerCase().includes(term) ||
         String(sheet.orderRef || '').toLowerCase().includes(term) ||
         String(sheet.submittedBy || '').toLowerCase().includes(term) ||
-        String(sheet.approvedBy || '').toLowerCase().includes(term)
+        String(sheet.approvedBy || '').toLowerCase().includes(term) ||
+        String(formatApproverName(sheet.approvedBy) || '').toLowerCase().includes(term)
       );
     });
   }, [sheets, activeTab, searchFilter]);
@@ -232,8 +234,9 @@ export const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status
       status={status}
       setStatus={setStatus}
     >
-      <div className="p-4 space-y-4 max-w-7xl mx-auto">
-        {/* Module Header Bar */}
+      <div className="flex-1 overflow-y-auto w-full p-4 space-y-4">
+        <div className="max-w-7xl mx-auto space-y-4">
+          {/* Module Header Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
           <div>
             <div className="flex items-center gap-2">
@@ -546,7 +549,7 @@ export const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status
                       <td className="border-r border-slate-200 dark:border-slate-800 p-2 text-slate-600 dark:text-slate-400 font-mono text-[11px]">
                         {sheet.approvedBy ? (
                           <>
-                            <div className="font-bold text-emerald-700 dark:text-emerald-400">{sheet.approvedBy}</div>
+                            <div className="font-bold text-emerald-700 dark:text-emerald-400">{formatApproverName(sheet.approvedBy)}</div>
                             <div className="text-[10px] text-slate-400">
                               {sheet.approvedAt ? new Date(sheet.approvedAt).toLocaleDateString() : ''}
                             </div>
@@ -610,7 +613,7 @@ export const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status
                   )}
                   {reviewSheet.approvalStatus === 'Approved' && (
                     <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      ✓ Authorized & Approved
+                      ✓ Authorized & Approved ({formatApproverName(reviewSheet.approvedBy)})
                     </span>
                   )}
                 </div>
@@ -697,6 +700,7 @@ export const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status
             </form>
           </div>
         )}
+        </div>
       </div>
     </PageLayout>
   );

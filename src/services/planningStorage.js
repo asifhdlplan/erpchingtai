@@ -255,10 +255,14 @@ export const planningStorage = {
     const target = sheets.find(s => String(s.id) === String(id));
     if (!target) throw new Error('Planning sheet not found.');
     
+    const finalApprover = String(approverUsername || 'ADMIN').trim().toLowerCase() === 'kalam'
+      ? 'Sr. GM - Plant'
+      : (approverUsername || 'ADMIN');
+
     const updated = {
       ...target,
       approvalStatus: 'Approved',
-      approvedBy: approverUsername || 'ADMIN',
+      approvedBy: finalApprover,
       approvedAt: new Date().toISOString()
     };
     return await planningStorage.savePlanningSheet(updated);
@@ -268,6 +272,9 @@ export const planningStorage = {
     const sheets = await planningStorage.getAllSheets();
     const idSet = new Set(ids.map(String));
     const now = new Date().toISOString();
+    const finalApprover = String(approverUsername || 'ADMIN').trim().toLowerCase() === 'kalam'
+      ? 'Sr. GM - Plant'
+      : (approverUsername || 'ADMIN');
     
     let approvedCount = 0;
     for (const sheet of sheets) {
@@ -275,7 +282,7 @@ export const planningStorage = {
         const updated = {
           ...sheet,
           approvalStatus: 'Approved',
-          approvedBy: approverUsername || 'ADMIN',
+          approvedBy: finalApprover,
           approvedAt: now
         };
         await planningStorage.savePlanningSheet(updated);
