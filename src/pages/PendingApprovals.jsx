@@ -5,9 +5,10 @@ import { PlanningSheetPreview } from '../components/planning/PlanningSheetPrevie
 import { authStorage } from '../auth/storage';
 import { useAuth } from '../context/AuthContext';
 
-const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status, setStatus }) => {
+export const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status, setStatus }) => {
   const [sheets, setSheets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRowIds, setSelectedRowIds] = useState([]);
   const [selectedRowId, setSelectedRowId] = useState(null);
   const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'approved' | 'all'
   const [searchFilter, setSearchFilter] = useState('');
@@ -58,10 +59,71 @@ const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status, setSt
       if (reviewSheet?.id === sheet.id) {
         setReviewSheet(null);
       }
+      setSelectedRowIds(prev => prev.filter(id => id !== sheet.id));
       await loadSheets();
     } catch (e) {
       console.error(e);
       alert(`Approval failed: ${e.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    const selectedPending = sheets.filter(
+      s => selectedRowIds.includes(s.id) && s.approvalStatus === 'Pending'
+    );
+
+    if (selectedPending.length === 0) {
+      alert('Please select at least one pending sizing plan from the table using the checkboxes.');
+      return;
+    }
+
+    const count = selectedPending.length;
+    const sampleSets = selectedPending.map(s => `#${s.setNo}`).slice(0, 4).join(', ') + (count > 4 ? ` and ${count - 4} more` : '');
+
+    if (!window.confirm(`Are you sure you want to AUTHORIZE and BULK APPROVE ${count} Sizing Plan(s) (${sampleSets})?\n\nThis will instantly unlock Print & PDF documents for all selected plans.`)) {
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const ids = selectedPending.map(s => s.id);
+      const approvedCount = await planningStorage.bulkApproveSheets(ids, currentUser);
+      if (setStatus) setStatus({ text: `Bulk authorized ${approvedCount} sizing plans successfully by ${currentUser}.`, type: 'S' });
+      alert(`Successfully authorized & bulk approved ${approvedCount} sizing plan(s)!\nPrint & PDF copies are now released.`);
+      setSelectedRowIds([]);
+      await loadSheets();
+    } catch (e) {
+      console.error(e);
+      alert(`Bulk approval failed: ${e.message}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleApproveAllPending = async () => {
+    const allPending = sheets.filter(s => s.approvalStatus === 'Pending');
+    if (allPending.length === 0) {
+      alert('There are no sizing plans currently awaiting approval.');
+      return;
+    }
+
+    if (!window.confirm(`⚡ APPROVE ALL PENDING:\n\nAre you sure you want to AUTHORIZE and APPROVE ALL ${allPending.length} pending Sizing Plan(s)?\n\nThis will release official Print/PDF copies for every pending plan.`)) {
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const ids = allPending.map(s => s.id);
+      const approvedCount = await planningStorage.bulkApproveSheets(ids, currentUser);
+      if (setStatus) setStatus({ text: `All ${approvedCount} pending sizing plans authorized by ${currentUser}.`, type: 'S' });
+      alert(`Successfully authorized and approved all ${approvedCount} pending sizing plan(s)!`);
+      setSelectedRowIds([]);
+      await loadSheets();
+    } catch (e) {
+      console.error(e);
+      alert(`Approve all failed: ${e.message}`);
     } finally {
       setActionLoading(false);
     }
@@ -81,6 +143,7 @@ const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status, setSt
       if (reviewSheet?.id === rejectTarget.id) {
         setReviewSheet(null);
       }
+      setSelectedRowIds(prev => prev.filter(id => id !== rejectTarget.id));
       await loadSheets();
     } catch (e) {
       console.error(e);
@@ -117,9 +180,49 @@ const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status, setSt
     });
   }, [sheets, activeTab, searchFilter]);
 
+  const visiblePendingSheets = useMemo(() => {
+    return filteredSheets.filter(s => s.approvalStatus === 'Pending');
+  }, [filteredSheets]);
+
+  const selectedPendingCount = useMemo(() => {
+    return sheets.filter(s => selectedRowIds.includes(s.id) && s.approvalStatus === 'Pending').length;
+  }, [sheets, selectedRowIds]);
+
+  const isAllSelected = useMemo(() => {
+    if (visiblePendingSheets.length === 0) return false;
+    return visiblePendingSheets.every(s => selectedRowIds.includes(s.id));
+  }, [visiblePendingSheets, selectedRowIds]);
+
+  const handleSelectAll = () => {
+    const pendingIds = visiblePendingSheets.map(s => s.id);
+    if (pendingIds.length === 0) return;
+
+    if (isAllSelected) {
+      // Deselect visible pending
+      setSelectedRowIds(prev => prev.filter(id => !pendingIds.includes(id)));
+    } else {
+      // Select all visible pending
+      setSelectedRowIds(prev => Array.from(new Set([...prev, ...pendingIds])));
+    }
+  };
+
+  const handleToggleSelect = (sheetId) => {
+    setSelectedRowId(sheetId);
+    setSelectedRowIds(prev => 
+      prev.includes(sheetId) ? prev.filter(id => id !== sheetId) : [...prev, sheetId]
+    );
+  };
+
   const selectedSheet = useMemo(() => {
-    return sheets.find(s => s.id === selectedRowId) || null;
-  }, [sheets, selectedRowId]);
+    if (selectedRowId) {
+      const found = sheets.find(s => s.id === selectedRowId);
+      if (found) return found;
+    }
+    if (selectedRowIds.length > 0) {
+      return sheets.find(s => s.id === selectedRowIds[0]) || null;
+    }
+    return null;
+  }, [sheets, selectedRowId, selectedRowIds]);
 
   return (
     <PageLayout
@@ -153,7 +256,7 @@ const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status, setSt
             <button 
               onClick={loadSheets} 
               className="sap-btn sap-btn-secondary"
-              disabled={loading}
+              disabled={loading || actionLoading}
             >
               ↻ Refresh
             </button>
@@ -222,75 +325,121 @@ const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status, setSt
           </div>
         </div>
 
-        {/* ALV Action Bar */}
-        <div className="flex flex-wrap items-center gap-2 bg-slate-50 dark:bg-slate-900 p-2 border border-slate-200 dark:border-slate-800 rounded">
-          <button
-            onClick={() => {
-              if (selectedSheet) setReviewSheet(selectedSheet);
-              else alert('Please select a sizing plan from the grid first.');
-            }}
-            disabled={!selectedRowId}
-            className="sap-btn"
-          >
-            👓 Inspect & Review Specs
-          </button>
-
-          {isApprover && (
-            <>
-              <button
-                onClick={() => {
-                  if (selectedSheet) {
-                    if (selectedSheet.approvalStatus === 'Approved') {
-                      alert(`Set #${selectedSheet.setNo} is already approved.`);
-                      return;
-                    }
-                    handleApprove(selectedSheet);
-                  } else {
-                    alert('Please select a sizing plan from the grid first.');
-                  }
-                }}
-                disabled={!selectedRowId || actionLoading || selectedSheet?.approvalStatus === 'Approved'}
-                className="sap-btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold disabled:opacity-50"
-              >
-                ✅ Approve Selected
-              </button>
-
-              <button
-                onClick={() => {
-                  if (selectedSheet) {
-                    setRejectTarget(selectedSheet);
-                    setRejectionReason('');
-                  } else {
-                    alert('Please select a sizing plan from the grid first.');
-                  }
-                }}
-                disabled={!selectedRowId || actionLoading || selectedSheet?.approvalStatus === 'Rejected'}
-                className="sap-btn bg-rose-600 hover:bg-rose-700 text-white font-bold disabled:opacity-50"
-              >
-                ❌ Reject Selected
-              </button>
-            </>
-          )}
-
-          {selectedSheet?.approvalStatus === 'Approved' && (
+        {/* ALV Action Bar with Bulk Approval Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-slate-900 p-2.5 border border-slate-200 dark:border-slate-800 rounded">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => {
-                setReviewSheet(selectedSheet);
-                setTimeout(() => window.print(), 300);
+                if (selectedSheet) setReviewSheet(selectedSheet);
+                else alert('Please select a sizing plan from the grid first.');
               }}
-              className="sap-btn sap-btn-secondary"
+              disabled={!selectedSheet}
+              className="sap-btn"
             >
-              🖨 Print / PDF
+              👓 Inspect & Review Specs
             </button>
-          )}
+
+            {isApprover && (
+              <>
+                {/* Bulk Approve Checked Plans */}
+                <button
+                  onClick={handleBulkApprove}
+                  disabled={actionLoading || selectedPendingCount === 0}
+                  className="sap-btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                  title="Authorize all currently checked pending sizing plans"
+                >
+                  <span>⚡ Bulk Approve ({selectedPendingCount})</span>
+                </button>
+
+                {/* Quick 1-Click Approve All Pending Plans */}
+                {counts.pending > 0 && (
+                  <button
+                    onClick={handleApproveAllPending}
+                    disabled={actionLoading}
+                    className="sap-btn bg-emerald-700 hover:bg-emerald-800 text-white font-bold disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                    title="Authorize and approve all pending plans in the system at once"
+                  >
+                    <span>⚡ Approve All Pending ({counts.pending})</span>
+                  </button>
+                )}
+
+                {/* Single Approve (when only 1 row is focused) */}
+                {selectedSheet && selectedSheet.approvalStatus === 'Pending' && selectedPendingCount <= 1 && (
+                  <button
+                    onClick={() => handleApprove(selectedSheet)}
+                    disabled={actionLoading}
+                    className="sap-btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold disabled:opacity-50"
+                  >
+                    ✅ Approve Selected
+                  </button>
+                )}
+
+                <button
+                  onClick={() => {
+                    if (selectedSheet) {
+                      setRejectTarget(selectedSheet);
+                      setRejectionReason('');
+                    } else {
+                      alert('Please select a sizing plan from the grid first.');
+                    }
+                  }}
+                  disabled={!selectedSheet || actionLoading || selectedSheet?.approvalStatus === 'Rejected'}
+                  className="sap-btn bg-rose-600 hover:bg-rose-700 text-white font-bold disabled:opacity-50"
+                >
+                  ❌ Reject Selected
+                </button>
+              </>
+            )}
+
+            {selectedSheet?.approvalStatus === 'Approved' && (
+              <button
+                onClick={() => {
+                  setReviewSheet(selectedSheet);
+                  setTimeout(() => window.print(), 300);
+                }}
+                className="sap-btn sap-btn-secondary"
+              >
+                🖨 Print / PDF
+              </button>
+            )}
+          </div>
+
+          {/* Selection Status Badge */}
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-mono flex items-center gap-2">
+            <span>
+              Selected: <strong className="text-slate-900 dark:text-slate-100">{selectedRowIds.length}</strong>
+              {selectedPendingCount > 0 && (
+                <span className="ml-1 text-amber-600 dark:text-amber-400 font-semibold">
+                  ({selectedPendingCount} pending)
+                </span>
+              )}
+            </span>
+            {selectedRowIds.length > 0 && (
+              <button
+                onClick={() => setSelectedRowIds([])}
+                className="text-blue-600 dark:text-blue-400 hover:underline text-[11px] font-sans"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* ALV Grid Table */}
+        {/* ALV Grid Table with Checkboxes */}
         <div className="border border-slate-200 dark:border-slate-800 rounded overflow-x-auto shadow-sm bg-white dark:bg-slate-900">
           <table className="w-full text-left text-xs border-collapse font-sans sap-alv-table">
             <thead>
               <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-800">
-                <th className="w-8 text-center border-r border-slate-200 dark:border-slate-800">Sel</th>
+                <th className="w-10 text-center border-r border-slate-200 dark:border-slate-800 p-2">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={handleSelectAll}
+                    disabled={visiblePendingSheets.length === 0}
+                    title={isAllSelected ? "Deselect All Visible" : "Select All Visible Pending"}
+                    className="w-3.5 h-3.5 cursor-pointer rounded text-emerald-600 focus:ring-emerald-500"
+                  />
+                </th>
                 <th className="border-r border-slate-200 dark:border-slate-800">Set No</th>
                 <th className="border-r border-slate-200 dark:border-slate-800">Date</th>
                 <th className="border-r border-slate-200 dark:border-slate-800">Buyer</th>
@@ -320,7 +469,8 @@ const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status, setSt
                 </tr>
               ) : (
                 filteredSheets.map((sheet) => {
-                  const isSelected = selectedRowId === sheet.id;
+                  const isChecked = selectedRowIds.includes(sheet.id);
+                  const isFocused = selectedRowId === sheet.id;
                   const isPending = sheet.approvalStatus === 'Pending';
                   const isApproved = sheet.approvalStatus === 'Approved';
                   const isRejected = sheet.approvalStatus === 'Rejected';
@@ -328,17 +478,26 @@ const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status, setSt
                   return (
                     <tr
                       key={sheet.id}
-                      onClick={() => setSelectedRowId(sheet.id)}
+                      onClick={() => {
+                        setSelectedRowId(sheet.id);
+                      }}
                       className={`cursor-pointer border-b border-slate-100 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-850 ${
-                        isSelected ? 'sap-selected' : ''
+                        isChecked 
+                          ? 'bg-amber-50/50 dark:bg-amber-950/20' 
+                          : isFocused 
+                          ? 'bg-slate-100/70 dark:bg-slate-800/60' 
+                          : ''
                       }`}
                     >
-                      <td className="text-center border-r border-slate-200 dark:border-slate-800 p-2">
+                      <td 
+                        className="text-center border-r border-slate-200 dark:border-slate-800 p-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <input
-                          type="radio"
-                          name="approval_select"
-                          checked={isSelected}
-                          onChange={() => setSelectedRowId(sheet.id)}
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleToggleSelect(sheet.id)}
+                          className="w-3.5 h-3.5 cursor-pointer rounded text-emerald-600 focus:ring-emerald-500"
                         />
                       </td>
                       <td className="font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-200 dark:border-slate-800 p-2">
@@ -353,10 +512,10 @@ const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status, setSt
                       <td className="font-mono border-r border-slate-200 dark:border-slate-800 p-2">
                         {sheet.styleCode || '—'}
                       </td>
-                      <td className="font-mono border-r border-slate-200 dark:border-slate-800 p-2">
+                      <td className="font-mono text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800 p-2">
                         {sheet.orderRef || '—'}
                       </td>
-                      <td className="font-mono text-right border-r border-slate-200 dark:border-slate-800 p-2">
+                      <td className="font-mono text-right font-bold border-r border-slate-200 dark:border-slate-800 p-2">
                         {sheet.setLength ? Number(sheet.setLength).toLocaleString() : '—'}
                       </td>
                       <td className="border-r border-slate-200 dark:border-slate-800 p-2">
@@ -460,40 +619,34 @@ const PendingApprovals = ({ currentPage, onNavigate, onAdminClick, status, setSt
                   {reviewSheet.approvalStatus === 'Approved' ? (
                     <button
                       onClick={() => window.print()}
-                      className="sap-btn bg-blue-600 text-white font-bold text-xs"
+                      className="sap-btn sap-btn-secondary flex items-center gap-1"
                     >
-                      🖨 Print / Save PDF
+                      <span>🖨</span>
+                      <span>Print / Save PDF</span>
                     </button>
                   ) : (
-                    <button
-                      disabled
-                      className="sap-btn opacity-50 cursor-not-allowed bg-slate-200 text-slate-500 font-bold text-xs"
-                      title="Plan must be approved by authorized user before printing"
-                    >
-                      🔒 Print / PDF (Approval Required)
-                    </button>
-                  )}
-
-                  {isApprover && reviewSheet.approvalStatus === 'Pending' && (
-                    <button
-                      onClick={() => handleApprove(reviewSheet)}
-                      className="sap-btn bg-emerald-600 text-white font-bold text-xs"
-                    >
-                      ✅ Grant Approval
-                    </button>
+                    isApprover && (
+                      <button
+                        onClick={() => handleApprove(reviewSheet)}
+                        disabled={actionLoading}
+                        className="sap-btn bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                      >
+                        ✓ Grant Final Approval
+                      </button>
+                    )
                   )}
 
                   <button
                     onClick={() => setReviewSheet(null)}
                     className="sap-btn sap-btn-secondary"
                   >
-                    ✕ Close
+                    Close (Esc)
                   </button>
                 </div>
               </div>
 
-              {/* Printable Document Preview Area */}
-              <div className="border border-slate-200 dark:border-slate-850 rounded p-2 overflow-x-auto bg-slate-50 dark:bg-slate-950">
+              {/* Printable Sizing Sheet Document */}
+              <div className="max-h-[75vh] overflow-y-auto p-2 bg-slate-100 dark:bg-slate-950 rounded border border-slate-200 dark:border-slate-800">
                 <PlanningSheetPreview data={reviewSheet} />
               </div>
             </div>

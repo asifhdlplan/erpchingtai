@@ -264,6 +264,27 @@ export const planningStorage = {
     return await planningStorage.savePlanningSheet(updated);
   },
 
+  bulkApproveSheets: async (ids, approverUsername) => {
+    const sheets = await planningStorage.getAllSheets();
+    const idSet = new Set(ids.map(String));
+    const now = new Date().toISOString();
+    
+    let approvedCount = 0;
+    for (const sheet of sheets) {
+      if (idSet.has(String(sheet.id))) {
+        const updated = {
+          ...sheet,
+          approvalStatus: 'Approved',
+          approvedBy: approverUsername || 'ADMIN',
+          approvedAt: now
+        };
+        await planningStorage.savePlanningSheet(updated);
+        approvedCount++;
+      }
+    }
+    return approvedCount;
+  },
+
   rejectSheet: async (id, approverUsername, reason) => {
     const sheets = await planningStorage.getAllSheets();
     const target = sheets.find(s => String(s.id) === String(id));
