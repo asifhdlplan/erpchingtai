@@ -234,8 +234,12 @@ const AllPlanningSheets = ({ currentPage, onNavigate, onAdminClick, onEditPlan, 
               <button 
                 onClick={() => {
                   const target = filteredSheets.find(s => s.id === selectedRowId);
-                  if (target) handlePrint(target);
-                  else alert('Please select a row in the ALV Grid first.');
+                  if (!target) return alert('Please select a row in the ALV Grid first.');
+                  if (target.approvalStatus === 'Pending') {
+                    alert(`Sizing Plan Set #${target.setNo} is currently PENDING AUTHORIZATION.\n\nPrint and PDF export are locked until an authorized manager approves it in the "Pending Approvals" module.`);
+                    return;
+                  }
+                  handlePrint(target);
                 }} 
                 className="sap-btn sap-btn-secondary"
                 disabled={!selectedRowId}
@@ -297,13 +301,14 @@ const AllPlanningSheets = ({ currentPage, onNavigate, onAdminClick, onEditPlan, 
                       <th>Order Ref</th>
                       <th>Weave</th>
                       <th>Colour</th>
+                      <th className="text-center">Approval Status</th>
                       <th className="text-center w-36">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredSheets.length === 0 ? (
                       <tr>
-                        <td colSpan="9" className="p-8 text-center text-slate-400 dark:text-slate-500 italic">No plans match the search criteria.</td>
+                        <td colSpan="10" className="p-8 text-center text-slate-400 dark:text-slate-500 italic">No plans match the search criteria.</td>
                       </tr>
                     ) : (
                       filteredSheets.map(sheet => (
@@ -328,6 +333,21 @@ const AllPlanningSheets = ({ currentPage, onNavigate, onAdminClick, onEditPlan, 
                           <td className="text-slate-700 dark:text-slate-300">{sheet.orderRef}</td>
                           <td className="text-slate-700 dark:text-slate-300">{sheet.weave}</td>
                           <td className="text-slate-700 dark:text-slate-300">{sheet.colour}</td>
+                          <td className="text-center p-2">
+                            {sheet.approvalStatus === 'Pending' ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                                ⏳ Pending
+                              </span>
+                            ) : sheet.approvalStatus === 'Rejected' ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                                ✕ Rejected
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                ✓ Approved
+                              </span>
+                            )}
+                          </td>
                           <td className="p-1 text-center" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-center gap-1">
                               <button 
@@ -360,12 +380,35 @@ const AllPlanningSheets = ({ currentPage, onNavigate, onAdminClick, onEditPlan, 
           </>
         ) : (
           <div className="flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200">
+            {selectedSheet?.approvalStatus === 'Pending' && (
+              <div className="w-full max-w-4xl p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 rounded text-xs flex items-center justify-between gap-3 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">🔒</span>
+                  <div>
+                    <div className="font-bold text-xs">Awaiting Manager Authorization (Status: Pending Approval)</div>
+                    <div className="text-[11px] text-amber-700 dark:text-amber-300">
+                      This Sizing Plan is pending authorization. Print and PDF export will be enabled once an authorized manager approves it.
+                    </div>
+                  </div>
+                </div>
+                <span className="font-mono text-[10px] px-2.5 py-1 rounded bg-amber-200 dark:bg-amber-900/60 font-bold border border-amber-400 dark:border-amber-700 shrink-0">
+                  Print Locked
+                </span>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <button 
+                disabled={selectedSheet?.approvalStatus === 'Pending'}
                 onClick={() => window.print()} 
-                className="sap-btn bg-blue-100 hover:bg-blue-200 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-200 font-bold text-xs"
+                className={`sap-btn font-bold text-xs ${
+                  selectedSheet?.approvalStatus === 'Pending'
+                    ? 'opacity-50 cursor-not-allowed bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                    : 'bg-blue-100 hover:bg-blue-200 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-200'
+                }`}
+                title={selectedSheet?.approvalStatus === 'Pending' ? "Locked pending authorization" : "Print planning sheet"}
               >
-                🖨 Print Planning Sheet
+                {selectedSheet?.approvalStatus === 'Pending' ? '🔒 Print / Save PDF (Pending Approval)' : '🖨 Print Planning Sheet'}
               </button>
               <button 
                 onClick={() => setIsPreviewMode(false)} 

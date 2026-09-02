@@ -64,11 +64,21 @@ export const planningStorage = {
     for (const item of localItems) {
       try {
         const dbData = { ...item };
+        
+        // Pack piRecDate and approvalInfo into flexible sizing JSONB for PostgreSQL compatibility
+        dbData.sizing = {
+          ...(dbData.sizing || {}),
+          piRecDate: dbData.piRecDate,
+          approvalInfo: {
+            approvalStatus: dbData.approvalStatus || 'Approved',
+            approvedBy: dbData.approvedBy || null,
+            approvedAt: dbData.approvedAt || null,
+            rejectionReason: dbData.rejectionReason || null,
+            submittedBy: dbData.submittedBy || 'ASIF',
+            submittedAt: dbData.submittedAt || dbData.timestamp
+          }
+        };
         if (dbData.piRecDate !== undefined) {
-          dbData.sizing = {
-            ...(dbData.sizing || {}),
-            piRecDate: dbData.piRecDate
-          };
           delete dbData.piRecDate;
         }
 
@@ -92,15 +102,32 @@ export const planningStorage = {
     const sheetData = { 
       ...sheet, 
       id: sheetId,
+      approvalStatus: sheet.approvalStatus || 'Pending',
+      submittedBy: sheet.submittedBy || 'ASIF',
+      submittedAt: sheet.submittedAt || new Date().toISOString(),
+      approvedBy: sheet.approvedBy || null,
+      approvedAt: sheet.approvedAt || null,
+      rejectionReason: sheet.rejectionReason || null,
       timestamp: sheet.timestamp || new Date().toISOString() 
     };
 
+    // Save to local storage first
+    saveToLocalStorage(sheetData);
+
     const dbData = { ...sheetData };
+    dbData.sizing = {
+      ...(dbData.sizing || {}),
+      piRecDate: dbData.piRecDate,
+      approvalInfo: {
+        approvalStatus: sheetData.approvalStatus,
+        approvedBy: sheetData.approvedBy,
+        approvedAt: sheetData.approvedAt,
+        rejectionReason: sheetData.rejectionReason,
+        submittedBy: sheetData.submittedBy,
+        submittedAt: sheetData.submittedAt
+      }
+    };
     if (dbData.piRecDate !== undefined) {
-      dbData.sizing = {
-        ...(dbData.sizing || {}),
-        piRecDate: dbData.piRecDate
-      };
       delete dbData.piRecDate;
     }
 
@@ -111,14 +138,12 @@ export const planningStorage = {
 
       if (error) {
         console.warn('Supabase save error, writing to localStorage fallback:', error.message);
-        saveToLocalStorage(sheetData);
       } else {
         deleteFromLocalStorage(sheetId);
       }
       return sheetData;
     } catch (e) {
       console.error('Failed to save planning sheet in database, falling back to localStorage:', e);
-      saveToLocalStorage(sheetData);
       return sheetData;
     }
   },
@@ -140,23 +165,75 @@ export const planningStorage = {
 
         if (!error) {
           const formattedData = (data || []).map(sheet => {
-            if (sheet.sizing?.piRecDate) {
-              return {
-                ...sheet,
-                piRecDate: sheet.sizing.piRecDate
-              };
-            }
-            return sheet;
+            const approvalInfo = sheet.sizing?.approvalInfo || {};
+            return {
+              ...sheet,
+              approvalStatus: sheet.approvalStatus || approvalInfo.approvalStatus || 'Approved',
+              approvedBy: sheet.approvedBy || approvalInfo.approvedBy || null,
+              approvedAt: sheet.approvedAt || approvalInfo.approvedAt || null,
+              rejectionReason: sheet.rejectionReason || approvalInfo.rejectionReason || null,
+              submittedBy: sheet.submittedBy || approvalInfo.submittedBy || 'ASIF',
+              submittedAt: sheet.submittedAt || approvalInfo.submittedAt || sheet.timestamp,
+              piRecDate: sheet.piRecDate || sheet.sizing?.piRecDate
+            };
           });
           return formattedData;
         }
       }
       // Fallback to local storage if cloud table check fails or returns error
-      return getFromLocalStorage().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      return getFromLocalStorage()
+        .map(sheet => ({
+          ...sheet,
+          approvalStatus: sheet.approvalStatus || 'Pending',
+          submittedBy: sheet.submittedBy || 'ASIF',
+          submittedAt: sheet.submittedAt || sheet.timestamp
+        }))
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     } catch (e) {
       console.error('Failed to get all sheets from database, falling back to localStorage:', e);
-      return getFromLocalStorage().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      return getFromLocalStorage()
+        .map(sheet => ({
+          ...sheet,
+          approvalStatus: sheet.approvalStatus || 'Pending',
+          submittedBy: sheet.submittedBy || 'ASIF',
+          submittedAt: sheet.submittedAt || sheet.timestamp
+        }))
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     }
+  },
+
+  getPendingSheets: async () => {
+    const sheets = await planningStorage.getAllSheets();
+    return sheets.filter(s => s.approvalStatus === 'Pending');
+  },
+
+  approveSheet: async (id, approverUsername) => {
+    const sheets = await planningStorage.getAllSheets();
+    const target = sheets.find(s => s.id === id);
+    if (!target) throw new Error('Planning sheet not found.');
+    
+    const updated = {
+      ...target,
+      approvalStatus: 'Approved',
+      approvedBy: approverUsername || 'ADMIN',
+      approvedAt: new Date().toISOString()
+    };
+    return await planningStorage.savePlanningSheet(updated);
+  },
+
+  rejectSheet: async (id, approverUsername, reason) => {
+    const sheets = await planningStorage.getAllSheets();
+    const target = sheets.find(s => s.id === id);
+    if (!target) throw new Error('Planning sheet not found.');
+    
+    const updated = {
+      ...target,
+      approvalStatus: 'Rejected',
+      approvedBy: approverUsername || 'ADMIN',
+      approvedAt: new Date().toISOString(),
+      rejectionReason: reason || 'Specifications require revision'
+    };
+    return await planningStorage.savePlanningSheet(updated);
   },
 
   deletePlanningSheet: async (id) => {
@@ -186,3 +263,5 @@ export const planningStorage = {
     }
   }
 };
+
+export default planningStorage;

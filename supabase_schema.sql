@@ -14,6 +14,7 @@ create table if not exists erp_users (
   username text primary key,
   "employeeName" text not null,
   password text not null,
+  "canApprovePlans" boolean default false,
   "createdAt" timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -61,6 +62,12 @@ create table if not exists erp_planning_sheets (
   "todayTaken" text,
   remain2 text,
   "piRecDate" text,
+  "approvalStatus" text default 'Pending',
+  "approvedBy" text,
+  "approvedAt" text,
+  "submittedBy" text,
+  "submittedAt" text,
+  "rejectionReason" text,
   "warpingRows" jsonb default '[]'::jsonb,
   sizing jsonb default '{}'::jsonb,
   "weavingRows" jsonb default '[]'::jsonb,

@@ -125,6 +125,7 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
   
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [savedPlan, setSavedPlan] = useState(null);
   const [activeTab, setActiveTab] = useState('warping'); // 'warping' | 'sizing' | 'weaving'
   const [yarnStocks, setYarnStocks] = useState([]);
   const [shortages, setShortages] = useState([]);
@@ -541,10 +542,17 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
       }
 
       // 6. Save Planning Sheet data
-      await planningStorage.savePlanningSheet(finalData);
+      const planToSave = {
+        ...finalData,
+        submittedBy: session?.username || 'ASIF',
+        submittedAt: new Date().toISOString(),
+        approvalStatus: editingPlan?.approvalStatus || 'Pending'
+      };
+      const saved = await planningStorage.savePlanningSheet(planToSave);
+      setSavedPlan(saved);
       setShowPreview(true);
-      if (setStatus) setStatus({ text: `Production Plan Set ${formData.setNo} saved successfully. Yarn stock quantities updated.`, type: 'S' });
-      alert(editingPlan ? 'Planning Sheet Updated Successfully and Yarn Stock Adjusted!' : 'Planning Sheet Created Successfully and Yarn Stock Deducted!');
+      if (setStatus) setStatus({ text: `Production Plan Set ${formData.setNo} saved successfully. Status: Pending Approval.`, type: 'S' });
+      alert(editingPlan ? 'Planning Sheet Updated Successfully!' : 'Planning Sheet Created Successfully! Awaiting manager authorization before Print/PDF unlocks.');
       if (setEditingPlan) setEditingPlan(null);
     } catch (e) {
       console.error(e);
@@ -1059,12 +1067,35 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
           </>
         ) : (
           <div className="flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200">
+            {savedPlan?.approvalStatus === 'Pending' && (
+              <div className="w-full max-w-4xl p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 rounded text-xs flex items-center justify-between gap-3 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xl">🔒</span>
+                  <div>
+                    <div className="font-bold text-xs">Awaiting Manager Authorization (Status: Pending Approval)</div>
+                    <div className="text-[11px] text-amber-700 dark:text-amber-300">
+                      This Sizing Plan has been submitted. The Print / Save PDF option will be unlocked once an authorized manager approves it.
+                    </div>
+                  </div>
+                </div>
+                <span className="font-mono text-[10px] px-2.5 py-1 rounded bg-amber-200 dark:bg-amber-900/60 font-bold border border-amber-400 dark:border-amber-700 shrink-0">
+                  Print Locked
+                </span>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <button 
+                disabled={savedPlan?.approvalStatus === 'Pending'}
                 onClick={() => window.print()} 
-                className="sap-btn bg-blue-100 hover:bg-blue-200 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-200 font-bold text-xs"
+                className={`sap-btn font-bold text-xs ${
+                  savedPlan?.approvalStatus === 'Pending'
+                    ? 'opacity-50 cursor-not-allowed bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                    : 'bg-blue-100 hover:bg-blue-200 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-200'
+                }`}
+                title={savedPlan?.approvalStatus === 'Pending' ? "Print/PDF locked until authorized by manager" : "Print Planning Sheet"}
               >
-                🖨 PRINT PLANNING SHEET
+                {savedPlan?.approvalStatus === 'Pending' ? '🔒 Print / Save PDF (Pending Approval)' : '🖨 PRINT PLANNING SHEET'}
               </button>
               <button 
                 onClick={() => setShowPreview(false)} 
@@ -1077,6 +1108,11 @@ const PlanningSheetCreation = ({ currentPage, onNavigate, onAdminClick, editingP
               ...formData, 
               warpingRows, 
               sizing: sizingData, 
+              approvalStatus: savedPlan?.approvalStatus || 'Pending',
+              submittedBy: savedPlan?.submittedBy || session?.username || 'ASIF',
+              submittedAt: savedPlan?.submittedAt,
+              approvedBy: savedPlan?.approvedBy,
+              approvedAt: savedPlan?.approvedAt,
               weavingRows: weavingRows.map((row, i) => i === 0 ? { ...row, ...weavingFabric } : row) 
             }} />
           </div>

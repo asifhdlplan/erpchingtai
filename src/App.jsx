@@ -11,6 +11,7 @@ import ActiveOrders from './pages/ActiveOrders';
 import CompletedOrders from './pages/CompletedOrders';
 import PlanningSheetCreation from './pages/PlanningSheetCreation';
 import AllPlanningSheets from './pages/AllPlanningSheets';
+import PendingApprovals from './pages/PendingApprovals';
 import SAPEasyAccess from './pages/SAPEasyAccess';
 import ActivityOverview from './pages/ActivityOverview';
 import YarnStockOverview from './pages/YarnStockOverview';
@@ -130,6 +131,16 @@ const ERPApp = () => {
               setEditingPlan(plan);
               handleNavigate('planning_creation', true);
             }}
+            status={status}
+            setStatus={setStatus}
+          />
+        );
+      case 'pending_approvals':
+        return (
+          <PendingApprovals
+            currentPage={currentPage}
+            onNavigate={handleNavigate}
+            onAdminClick={() => setShowAdminPanel(true)}
             status={status}
             setStatus={setStatus}
           />

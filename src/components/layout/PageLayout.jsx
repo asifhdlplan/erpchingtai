@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { planningStorage } from '../../services/planningStorage';
 
 export const PageLayout = ({ 
   children, 
@@ -11,6 +12,7 @@ export const PageLayout = ({
 }) => {
   const { session, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
+  const [pendingCount, setPendingCount] = useState(0);
   const [treeExpanded, setTreeExpanded] = useState({
     easyAccess: true,
     logistics: true,
@@ -26,6 +28,19 @@ export const PageLayout = ({
   });
 
   const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPending = async () => {
+      try {
+        const pending = await planningStorage.getPendingSheets();
+        if (isMounted) setPendingCount(pending.length);
+      } catch {}
+    };
+    fetchPending();
+    const interval = setInterval(fetchPending, 15000);
+    return () => { isMounted = false; clearInterval(interval); };
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -65,6 +80,8 @@ export const PageLayout = ({
         return { code: 'CO01', title: 'Create Production Sizing Plan' };
       case 'all_planning':
         return { code: 'COOIS', title: 'Production Plan Archive' };
+      case 'pending_approvals':
+        return { code: 'ZPLAN_APP', title: 'Pending Sizing Plan Approvals' };
       case 'production_entry':
         return { code: 'ZPROD_ENT', title: 'Daily Production Entry' };
       case 'set_wise_production':
@@ -303,6 +320,22 @@ export const PageLayout = ({
                           >
                             Sizing Plan Archive
                           </div>
+                          {(session?.canApprovePlans || session?.username?.toUpperCase() === 'ADMIN') && (
+                            <div 
+                              onClick={() => onNavigate('pending_approvals')}
+                              className={`sap-tree-item flex items-center justify-between ${currentPage === 'pending_approvals' ? 'active' : ''}`}
+                            >
+                              <span className="flex items-center gap-1.5 font-semibold text-amber-600 dark:text-amber-400">
+                                <span>🛡️</span>
+                                <span>Pending Approvals</span>
+                              </span>
+                              {pendingCount > 0 && (
+                                <span className="bg-amber-500 text-slate-950 font-bold font-mono text-[9px] px-1.5 py-0.2 rounded-full">
+                                  {pendingCount}
+                                </span>
+                              )}
+                            </div>
+                          )}
                           <div 
                             onClick={() => onNavigate('production_entry')}
                             className={`sap-tree-item ${currentPage === 'production_entry' ? 'active' : ''}`}
@@ -468,3 +501,5 @@ export const PageLayout = ({
     </div>
   );
 };
+
+export default PageLayout;

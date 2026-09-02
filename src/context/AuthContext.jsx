@@ -8,6 +8,15 @@ export const AuthProvider = ({ children }) => {
 
   React.useEffect(() => {
     initAuthData();
+    const handleSessionChange = () => {
+      setSession(validateSession());
+    };
+    window.addEventListener('session_updated', handleSessionChange);
+    window.addEventListener('storage', handleSessionChange);
+    return () => {
+      window.removeEventListener('session_updated', handleSessionChange);
+      window.removeEventListener('storage', handleSessionChange);
+    };
   }, []);
 
   const login = async (username, password) => {

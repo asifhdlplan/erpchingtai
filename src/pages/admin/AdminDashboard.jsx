@@ -3,7 +3,7 @@ import { PageLayout } from '../../components/layout/PageLayout';
 import { authStorage } from '../../auth/storage';
 import { createUser, deleteUser, resetUserPassword, updateUser } from '../../auth/utils';
 
-const UserManagementTable = ({ users, onEdit, onDelete, onReset, selectedRowId, setSelectedRowId }) => (
+const UserManagementTable = ({ users, onEdit, onDelete, onReset, onToggleApprover, selectedRowId, setSelectedRowId }) => (
   <div className="overflow-auto border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#151D30] rounded-lg">
     <table className="sap-alv-table border-collapse w-full text-xs">
       <thead>
@@ -12,6 +12,7 @@ const UserManagementTable = ({ users, onEdit, onDelete, onReset, selectedRowId, 
           <th className="border-r border-slate-200 dark:border-slate-800">Employee Name</th>
           <th className="border-r border-slate-200 dark:border-slate-800">Username</th>
           <th className="border-r border-slate-200 dark:border-slate-800">Password</th>
+          <th className="border-r border-slate-200 dark:border-slate-800">Role / Approver</th>
           <th className="border-r border-slate-200 dark:border-slate-800">Created Date</th>
           <th className="text-center w-52">Actions</th>
         </tr>
@@ -19,7 +20,7 @@ const UserManagementTable = ({ users, onEdit, onDelete, onReset, selectedRowId, 
       <tbody>
         {users.length === 0 ? (
           <tr>
-            <td colSpan="6" className="p-4 text-center text-slate-400 dark:text-slate-500 italic">No users found.</td>
+            <td colSpan="7" className="p-4 text-center text-slate-400 dark:text-slate-500 italic">No users found.</td>
           </tr>
         ) : (
           users.map((u) => (
@@ -39,6 +40,24 @@ const UserManagementTable = ({ users, onEdit, onDelete, onReset, selectedRowId, 
               <td className="font-bold text-slate-800 dark:text-slate-200 border-r border-slate-200 dark:border-slate-800 p-2">{u.employeeName}</td>
               <td className="font-mono text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800 p-2">{u.username}</td>
               <td className="font-mono text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800 p-2">{u.password}</td>
+              <td className="text-center border-r border-slate-200 dark:border-slate-800 p-2">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onToggleApprover(u); }}
+                  title="Click to toggle Approver Authorization"
+                  className="cursor-pointer transition-transform active:scale-95"
+                >
+                  {u.canApprovePlans || u.username.toUpperCase() === 'ADMIN' ? (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-200 transition">
+                      ✓ Sizing Approver
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950/30 dark:hover:text-amber-300 border border-slate-200 dark:border-slate-700 transition">
+                      + Set Approver
+                    </span>
+                  )}
+                </button>
+              </td>
               <td className="text-slate-500 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800 font-mono p-2">{new Date(u.createdAt).toLocaleString()}</td>
               <td className="p-1 text-center">
                 <div className="flex items-center justify-center gap-1">
@@ -73,7 +92,7 @@ const UserManagementTable = ({ users, onEdit, onDelete, onReset, selectedRowId, 
 const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStatus }) => {
   const [users, setUsers] = useState([]);
   const [selectedRowId, setSelectedRowId] = useState(null);
-  const [form, setForm] = useState({ employeeName: '', username: '', password: '' });
+  const [form, setForm] = useState({ employeeName: '', username: '', password: '', canApprovePlans: false });
   const [editTarget, setEditTarget] = useState(null);
   const [adminPwd, setAdminPwd] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
 
@@ -101,7 +120,7 @@ const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStat
     const res = await createUser(form);
     if (!res.ok) return showNotification(res.message, 'error');
     setUsers(res.users); 
-    setForm({ employeeName: '', username: '', password: '' }); 
+    setForm({ employeeName: '', username: '', password: '', canApprovePlans: false }); 
     showNotification('User profile created successfully.');
   };
 
@@ -126,7 +145,19 @@ const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStat
     if (!res.ok) return showNotification(res.message, 'error');
     setUsers(res.users); 
     setEditTarget(null); 
-    showNotification('User profile details updated.');
+    showNotification(`User profile updated. Approver: ${editTarget.canApprovePlans ? 'Authorized' : 'Standard'}`);
+  };
+
+  const handleToggleApprover = async (u) => {
+    if (u.username.toUpperCase() === 'ADMIN') {
+      alert('The ADMIN account always retains full approver authorization.');
+      return;
+    }
+    const newStatus = !u.canApprovePlans;
+    const res = await updateUser(u.username, { ...u, canApprovePlans: newStatus });
+    if (!res.ok) return showNotification(res.message, 'error');
+    setUsers(res.users);
+    showNotification(`Approver privileges ${newStatus ? 'granted to' : 'revoked from'} ${u.username}.`);
   };
 
   const changeAdminPassword = async (e) => {
@@ -164,6 +195,17 @@ const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStat
             disabled={!selectedRowId}
           >
             ✏ Edit Details
+          </button>
+          <button 
+            onClick={() => {
+              const target = users.find(u => u.username === selectedRowId);
+              if (target) handleToggleApprover(target);
+              else alert('Please select a user in the ALV Grid first.');
+            }}
+            className="sap-btn"
+            disabled={!selectedRowId}
+          >
+            🛡 Toggle Approver
           </button>
           <button 
             onClick={() => {
@@ -225,6 +267,7 @@ const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStat
                 onDelete={handleDelete}
                 onReset={handleReset}
                 onEdit={(u) => setEditTarget({ ...u, originalUsername: u.username })}
+                onToggleApprover={handleToggleApprover}
               />
             </section>
             
@@ -244,6 +287,18 @@ const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStat
                     <input className="w-full sap-required font-mono" value={editTarget.username} onChange={(e)=>setEditTarget({...editTarget, username:e.target.value})}/>
                   </div>
                   <button className="sap-btn w-full">Confirm Modify</button>
+                  <div className="col-span-1 sm:col-span-3 flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-850">
+                    <input 
+                      type="checkbox" 
+                      id="edit_can_approve" 
+                      checked={editTarget.canApprovePlans || false} 
+                      onChange={(e) => setEditTarget({ ...editTarget, canApprovePlans: e.target.checked })} 
+                      className="w-4 h-4 text-emerald-600 rounded cursor-pointer"
+                    />
+                    <label htmlFor="edit_can_approve" className="text-xs font-semibold cursor-pointer text-slate-700 dark:text-slate-300">
+                      Authorize as Sizing Plan Approver (Can approve & unlock Sizing Plans)
+                    </label>
+                  </div>
                 </form>
               </section>
             )}
@@ -267,6 +322,18 @@ const AdminDashboard = ({ currentPage, onNavigate, onAdminClick, status, setStat
                 <div className="flex flex-col">
                   <label className="sap-label mb-1">Initial Password</label>
                   <input type="password" autoComplete="new-password" className="w-full sap-required" placeholder="••••••••" value={form.password} onChange={(e)=>setForm({...form, password:e.target.value})}/>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <input 
+                    type="checkbox" 
+                    id="add_can_approve" 
+                    checked={form.canApprovePlans || false} 
+                    onChange={(e) => setForm({ ...form, canApprovePlans: e.target.checked })} 
+                    className="w-4 h-4 text-emerald-600 rounded cursor-pointer"
+                  />
+                  <label htmlFor="add_can_approve" className="text-xs font-semibold cursor-pointer text-slate-700 dark:text-slate-300">
+                    Authorize as Sizing Plan Approver
+                  </label>
                 </div>
                 <button className="sap-btn w-full mt-2">Create Profile</button>
               </form>

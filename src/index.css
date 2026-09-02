@@ -508,4 +508,43 @@ label, .sap-label {
   background-color: #fef2f2 !important;
 }
 
+/* Explicit red color override for unapproved status banner */
+#printable-sheet .status-restricted-banner,
+.print-only-preview .status-restricted-banner,
+#printable-sheet .status-restricted-banner *,
+.print-only-preview .status-restricted-banner * {
+  background-color: #fef2f2 !important;
+  color: #dc2626 !important;
+  border-color: #dc2626 !important;
+}
+
+/* Explicit emerald color override for approval seal */
+#printable-sheet .status-approved-seal,
+.print-only-preview .status-approved-seal {
+  color: #065f46 !important;
+}
+
+/* Explicit red color override for Approval Pending signature */
+#printable-sheet .status-pending-signature,
+.print-only-preview .status-pending-signature {
+  color: #dc2626 !important;
+}
+
+/* Background watermark shade for company branding */
+#printable-sheet .watermark-shade,
+.print-only-preview .watermark-shade {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  opacity: 0.045 !important;
+}
+
+#printable-sheet .watermark-text,
+.print-only-preview .watermark-text {
+  color: #000000 !important;
+  opacity: 0.045 !important;
+}
+
+
 
