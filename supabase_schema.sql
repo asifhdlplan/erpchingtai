@@ -185,3 +185,15 @@ alter table erp_production_entries enable row level security;
 -- Create policy for erp_production_entries
 create policy "Allow all actions for anon on erp_production_entries" on erp_production_entries
   for all to anon using (true) with check (true);
+
+-- =========================================================================
+-- SAFE MIGRATION HELPERS (Run these if your tables were created earlier)
+-- =========================================================================
+alter table erp_users add column if not exists "canApprovePlans" boolean default false;
+alter table erp_planning_sheets add column if not exists "piRecDate" text;
+alter table erp_planning_sheets add column if not exists "approvalStatus" text default 'Pending';
+alter table erp_planning_sheets add column if not exists "approvedBy" text;
+alter table erp_planning_sheets add column if not exists "approvedAt" text;
+alter table erp_planning_sheets add column if not exists "submittedBy" text;
+alter table erp_planning_sheets add column if not exists "submittedAt" text;
+alter table erp_planning_sheets add column if not exists "rejectionReason" text;

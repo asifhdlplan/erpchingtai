@@ -14,9 +14,9 @@ const getFromLocalStorage = () => {
 const saveToLocalStorage = (item) => {
   try {
     const items = getFromLocalStorage();
-    const idx = items.findIndex(i => i.id === item.id);
+    const idx = items.findIndex(i => String(i.id) === String(item.id));
     if (idx >= 0) {
-      items[idx] = item;
+      items[idx] = { ...items[idx], ...item };
     } else {
       items.push(item);
     }
@@ -29,10 +29,67 @@ const saveToLocalStorage = (item) => {
 const deleteFromLocalStorage = (id) => {
   try {
     const items = getFromLocalStorage();
-    const filtered = items.filter(i => i.id !== id);
+    const filtered = items.filter(i => String(i.id) !== String(id));
     localStorage.setItem(PLANNING_STORAGE_KEY, JSON.stringify(filtered));
   } catch (e) {
     console.error('Failed to delete from localStorage:', e);
+  }
+};
+
+const prepareDbPayload = (sheetData) => {
+  const payload = { ...sheetData };
+  payload.sizing = {
+    ...(payload.sizing || {}),
+    piRecDate: sheetData.piRecDate,
+    approvalInfo: {
+      approvalStatus: sheetData.approvalStatus || 'Pending',
+      approvedBy: sheetData.approvedBy || null,
+      approvedAt: sheetData.approvedAt || null,
+      rejectionReason: sheetData.rejectionReason || null,
+      submittedBy: sheetData.submittedBy || sheetData.sizing?.createdBy || 'ASIF',
+      submittedAt: sheetData.submittedAt || sheetData.timestamp || new Date().toISOString()
+    }
+  };
+  return payload;
+};
+
+const sanitizeForLegacySchema = (payload) => {
+  const clean = { ...payload };
+  delete clean.piRecDate;
+  delete clean.approvalStatus;
+  delete clean.approvedBy;
+  delete clean.approvedAt;
+  delete clean.rejectionReason;
+  delete clean.submittedBy;
+  delete clean.submittedAt;
+  return clean;
+};
+
+const upsertToCloud = async (sheetData) => {
+  const fullPayload = prepareDbPayload(sheetData);
+
+  try {
+    // 1. First attempt: try full upsert with new schema columns
+    let { error } = await supabase
+      .from('erp_planning_sheets')
+      .upsert(fullPayload);
+
+    if (error) {
+      // 2. Fallback attempt: if columns don't exist in PostgreSQL, sanitize and save inside sizing JSONB
+      const legacyPayload = sanitizeForLegacySchema(fullPayload);
+      const retry = await supabase
+        .from('erp_planning_sheets')
+        .upsert(legacyPayload);
+
+      if (retry.error) {
+        console.warn('Supabase upsert failed after legacy fallback:', retry.error.message);
+        return { ok: false, error: retry.error };
+      }
+    }
+    return { ok: true };
+  } catch (e) {
+    console.error('Cloud upsert error:', e);
+    return { ok: false, error: e };
   }
 };
 
@@ -63,30 +120,8 @@ export const planningStorage = {
     let syncedCount = 0;
     for (const item of localItems) {
       try {
-        const dbData = { ...item };
-        
-        // Pack piRecDate and approvalInfo into flexible sizing JSONB for PostgreSQL compatibility
-        dbData.sizing = {
-          ...(dbData.sizing || {}),
-          piRecDate: dbData.piRecDate,
-          approvalInfo: {
-            approvalStatus: dbData.approvalStatus || 'Approved',
-            approvedBy: dbData.approvedBy || null,
-            approvedAt: dbData.approvedAt || null,
-            rejectionReason: dbData.rejectionReason || null,
-            submittedBy: dbData.submittedBy || 'ASIF',
-            submittedAt: dbData.submittedAt || dbData.timestamp
-          }
-        };
-        if (dbData.piRecDate !== undefined) {
-          delete dbData.piRecDate;
-        }
-
-        const { error } = await supabase
-          .from('erp_planning_sheets')
-          .upsert(dbData);
-          
-        if (!error) {
+        const res = await upsertToCloud(item);
+        if (res.ok) {
           syncedCount++;
           deleteFromLocalStorage(item.id);
         }
@@ -103,7 +138,7 @@ export const planningStorage = {
       ...sheet, 
       id: sheetId,
       approvalStatus: sheet.approvalStatus || 'Pending',
-      submittedBy: sheet.submittedBy || 'ASIF',
+      submittedBy: sheet.submittedBy || sheet.sizing?.createdBy || 'ASIF',
       submittedAt: sheet.submittedAt || new Date().toISOString(),
       approvedBy: sheet.approvedBy || null,
       approvedAt: sheet.approvedAt || null,
@@ -111,49 +146,29 @@ export const planningStorage = {
       timestamp: sheet.timestamp || new Date().toISOString() 
     };
 
-    // Save to local storage first
+    // 1. Always save to local storage immediately for zero data loss
     saveToLocalStorage(sheetData);
 
-    const dbData = { ...sheetData };
-    dbData.sizing = {
-      ...(dbData.sizing || {}),
-      piRecDate: dbData.piRecDate,
-      approvalInfo: {
-        approvalStatus: sheetData.approvalStatus,
-        approvedBy: sheetData.approvedBy,
-        approvedAt: sheetData.approvedAt,
-        rejectionReason: sheetData.rejectionReason,
-        submittedBy: sheetData.submittedBy,
-        submittedAt: sheetData.submittedAt
-      }
-    };
-    if (dbData.piRecDate !== undefined) {
-      delete dbData.piRecDate;
+    // 2. Upload to Supabase database (with resilient fallback for unmigrated columns)
+    const res = await upsertToCloud(sheetData);
+    if (res.ok) {
+      // If successfully uploaded to cloud, remove from local storage so it's not duplicated
+      deleteFromLocalStorage(sheetId);
     }
 
-    try {
-      const { error } = await supabase
-        .from('erp_planning_sheets')
-        .upsert(dbData);
-
-      if (error) {
-        console.warn('Supabase save error, writing to localStorage fallback:', error.message);
-      } else {
-        deleteFromLocalStorage(sheetId);
-      }
-      return sheetData;
-    } catch (e) {
-      console.error('Failed to save planning sheet in database, falling back to localStorage:', e);
-      return sheetData;
-    }
+    return sheetData;
   },
 
   getAllSheets: async () => {
     try {
+      const localItems = getFromLocalStorage();
       const tableCheck = await planningStorage.checkCloudTable();
+      
+      let cloudSheets = [];
+      let cloudSuccess = false;
+
       if (tableCheck.exists) {
-        // Sync local storage sheets first
-        const localItems = getFromLocalStorage();
+        // Sync any unsynced local sheets to cloud
         if (localItems.length > 0) {
           await planningStorage.syncLocalToCloud();
         }
@@ -163,8 +178,9 @@ export const planningStorage = {
           .select('*')
           .order('timestamp', { ascending: false });
 
-        if (!error) {
-          const formattedData = (data || []).map(sheet => {
+        if (!error && data) {
+          cloudSuccess = true;
+          cloudSheets = data.map(sheet => {
             const approvalInfo = sheet.sizing?.approvalInfo || {};
             return {
               ...sheet,
@@ -172,32 +188,59 @@ export const planningStorage = {
               approvedBy: sheet.approvedBy || approvalInfo.approvedBy || null,
               approvedAt: sheet.approvedAt || approvalInfo.approvedAt || null,
               rejectionReason: sheet.rejectionReason || approvalInfo.rejectionReason || null,
-              submittedBy: sheet.submittedBy || approvalInfo.submittedBy || 'ASIF',
+              submittedBy: sheet.submittedBy || approvalInfo.submittedBy || sheet.sizing?.createdBy || 'ASIF',
               submittedAt: sheet.submittedAt || approvalInfo.submittedAt || sheet.timestamp,
-              piRecDate: sheet.piRecDate || sheet.sizing?.piRecDate
+              piRecDate: sheet.piRecDate || sheet.sizing?.piRecDate || '-'
             };
           });
-          return formattedData;
         }
       }
-      // Fallback to local storage if cloud table check fails or returns error
-      return getFromLocalStorage()
-        .map(sheet => ({
-          ...sheet,
-          approvalStatus: sheet.approvalStatus || 'Pending',
-          submittedBy: sheet.submittedBy || 'ASIF',
-          submittedAt: sheet.submittedAt || sheet.timestamp
-        }))
+
+      // If cloud succeeded, ALWAYS merge with any remaining local items so nothing is ever missing!
+      if (cloudSuccess) {
+        const remainingLocals = getFromLocalStorage().map(sheet => {
+          const approvalInfo = sheet.sizing?.approvalInfo || {};
+          return {
+            ...sheet,
+            approvalStatus: sheet.approvalStatus || approvalInfo.approvalStatus || 'Pending',
+            submittedBy: sheet.submittedBy || approvalInfo.submittedBy || sheet.sizing?.createdBy || 'ASIF',
+            submittedAt: sheet.submittedAt || approvalInfo.submittedAt || sheet.timestamp,
+            piRecDate: sheet.piRecDate || sheet.sizing?.piRecDate || '-'
+          };
+        });
+
+        const cloudIds = new Set(cloudSheets.map(s => String(s.id)));
+        const unsyncedLocals = remainingLocals.filter(l => !cloudIds.has(String(l.id)));
+        
+        return [...unsyncedLocals, ...cloudSheets].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      }
+
+      // Fallback if cloud was offline/failed
+      return localItems
+        .map(sheet => {
+          const approvalInfo = sheet.sizing?.approvalInfo || {};
+          return {
+            ...sheet,
+            approvalStatus: sheet.approvalStatus || approvalInfo.approvalStatus || 'Pending',
+            submittedBy: sheet.submittedBy || approvalInfo.submittedBy || sheet.sizing?.createdBy || 'ASIF',
+            submittedAt: sheet.submittedAt || approvalInfo.submittedAt || sheet.timestamp,
+            piRecDate: sheet.piRecDate || sheet.sizing?.piRecDate || '-'
+          };
+        })
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     } catch (e) {
-      console.error('Failed to get all sheets from database, falling back to localStorage:', e);
+      console.error('Failed to get all sheets, returning local cache:', e);
       return getFromLocalStorage()
-        .map(sheet => ({
-          ...sheet,
-          approvalStatus: sheet.approvalStatus || 'Pending',
-          submittedBy: sheet.submittedBy || 'ASIF',
-          submittedAt: sheet.submittedAt || sheet.timestamp
-        }))
+        .map(sheet => {
+          const approvalInfo = sheet.sizing?.approvalInfo || {};
+          return {
+            ...sheet,
+            approvalStatus: sheet.approvalStatus || approvalInfo.approvalStatus || 'Pending',
+            submittedBy: sheet.submittedBy || approvalInfo.submittedBy || sheet.sizing?.createdBy || 'ASIF',
+            submittedAt: sheet.submittedAt || approvalInfo.submittedAt || sheet.timestamp,
+            piRecDate: sheet.piRecDate || sheet.sizing?.piRecDate || '-'
+          };
+        })
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     }
   },
@@ -209,7 +252,7 @@ export const planningStorage = {
 
   approveSheet: async (id, approverUsername) => {
     const sheets = await planningStorage.getAllSheets();
-    const target = sheets.find(s => s.id === id);
+    const target = sheets.find(s => String(s.id) === String(id));
     if (!target) throw new Error('Planning sheet not found.');
     
     const updated = {
@@ -223,7 +266,7 @@ export const planningStorage = {
 
   rejectSheet: async (id, approverUsername, reason) => {
     const sheets = await planningStorage.getAllSheets();
-    const target = sheets.find(s => s.id === id);
+    const target = sheets.find(s => String(s.id) === String(id));
     if (!target) throw new Error('Planning sheet not found.');
     
     const updated = {
